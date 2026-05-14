@@ -1,8 +1,49 @@
-# SOS DIGITAL — Invoicing & Business Management App
+# SOS DIGITAL — Invoicing & Business Management
 
-A full-stack bilingual (FR/EN) invoicing and receipt management web application.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org)
 
-**Tech Stack:** React (Vite) · Node.js/Express · PostgreSQL (Prisma) · JWT Auth
+> A full-stack, bilingual (FR/EN) invoicing and business management platform for digital freelancers and small businesses in Cameroon.
+
+**Tech Stack:** React 18 (Vite) · Node.js/Express · PostgreSQL (Prisma ORM) · JWT Auth · Docker
+
+---
+
+## ✨ Features
+
+### 🧾 Invoice Editor
+- **6-tab form** — Company, Client, Details, Services, Notes, Design
+- **Live A4 preview** — updates in real-time as you type
+- **4 document templates** — Élégant, Classique, Moderne, Minimaliste
+- **8 color palettes** — Bleu ciel, Violet, Émeraude, Orange, Rose, Brun, Ardoise, Or
+- **6 font choices** — Inter, Arial, Georgia, Times New Roman, Courier New, Trebuchet MS
+- **Custom watermark** — type (text/image), style, position, size & opacity sliders
+- **Custom stamp** — image upload, size/opacity sliders, click-to-place on preview
+- **Grouped service sections** with per-section subtotals
+- **PDF export** — Classic & Modern templates
+
+### 📊 Business Modules
+- **Dashboard** — Revenue charts, KPIs, top clients, recent invoices
+- **CRM** — Full client management (status: Active/Inactive/VIP)
+- **Quotes** — Create, send, convert to invoice in one click
+- **Catalog** — Reusable service items with quick-add to invoice
+- **Payments** — Record partial/full payments (Virement, Mobile Money, etc.)
+- **Reports** — Annual summary + filtered CSV export
+
+### 🔐 Auth & Access Control
+- JWT-based authentication
+- 3 roles: **Admin**, **Sales**, **Accounting**
+- Role-based route protection (frontend + backend)
+
+### 🌐 Bilingual
+- Full French / English UI toggle (persisted per session)
+- Document language per invoice/quote (FR or EN)
+
+### 💬 Chatbot
+- Floating FAQ chatbot with quick-action chips
+- Message count badge on floating button
+- Bilingual responses
 
 ---
 
@@ -10,11 +51,14 @@ A full-stack bilingual (FR/EN) invoicing and receipt management web application.
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL 14+ running locally (or Docker)
+- PostgreSQL 14+ running locally (or use Docker)
 
 ### 1. Clone & Install
 
 ```bash
+git clone https://github.com/gdac-dev/sos-digital-invoicing.git
+cd sos-digital-invoicing
+
 # Install server dependencies
 cd server
 npm install
@@ -27,50 +71,46 @@ npm install
 ### 2. Configure Environment
 
 ```bash
-# Copy example env
-cp server/.env.example server/.env
+cd server
+cp .env.example .env
 ```
 
-Edit `server/.env` and set your **actual** PostgreSQL password:
+Edit `server/.env`:
 
 ```env
-DATABASE_URL="postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/sos_digital"
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/sos_digital"
+JWT_SECRET="your-secret-key-here"
+JWT_EXPIRES_IN="7d"
+PORT=3001
+ADMIN_NAME="Admin"
+ADMIN_EMAIL="admin@sosdigital.cm"
+ADMIN_PASSWORD="Admin@SOS2024"
 ```
 
-> **Tip:** Find your password in pgAdmin → right-click server → Properties → Connection
-
-### 3. Setup Database
+### 3. Setup Database & Seed
 
 ```bash
 cd server
-
-# Create DB tables
-npx prisma db push
-
-# Seed with admin account + sample data
-node prisma/seed.js
+node setup.js
 ```
+
+This runs: Prisma generate → db push → seed (admin user + sample data)
 
 ### 4. Start Development Servers
 
-**Terminal 1 — API Server:**
 ```bash
+# Terminal 1 — Backend
 cd server
 npm run dev
-# → Running on http://localhost:3001
-```
 
-**Terminal 2 — React Client:**
-```bash
+# Terminal 2 — Frontend
 cd client
 npm run dev
-# → Running on http://localhost:5173
 ```
 
-### 5. Login
+App available at **http://localhost:5173**
 
-Open http://localhost:5173 and log in with:
-
+### Default Admin Credentials
 | Field | Value |
 |---|---|
 | Email | `admin@sosdigital.cm` |
@@ -78,122 +118,70 @@ Open http://localhost:5173 and log in with:
 
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Docker (Full Stack)
 
 ```bash
-# Edit docker-compose.yml — update SMTP credentials
-docker-compose up -d
+# At project root
+docker-compose up --build
 ```
 
-App available at: `http://localhost:5173`
+Services started:
+- `db` — PostgreSQL 15
+- `api` — Node.js/Express on port 3001
+- `client` — Nginx serving React build on port 80
+
+---
+
+## ☁️ Deployment
+
+### Frontend → Vercel
+1. Import repo on [vercel.com/new](https://vercel.com/new)
+2. Set **Root Directory** = `client`
+3. Framework = **Vite**
+4. Add env var: `VITE_API_URL=https://your-backend-url.com`
+5. Deploy
+
+### Backend → Railway
+1. [railway.app](https://railway.app) → New Project → GitHub repo
+2. Select `server` as root
+3. Add PostgreSQL plugin
+4. Set all env vars from `.env.example`
+5. Deploy — copy the URL → paste into Vercel `VITE_API_URL`
 
 ---
 
 ## 📁 Project Structure
 
 ```
-SOS_Digital/
-├── client/          # React + Vite frontend
+sos-digital-invoicing/
+├── client/                   # React frontend (Vite)
+│   ├── public/logo.jpeg      # Company logo + favicon
 │   ├── src/
-│   │   ├── components/  # UI components
-│   │   ├── pages/       # Route pages
-│   │   ├── context/     # Auth + Lang context
-│   │   ├── translations/ # fr.json / en.json
-│   │   └── utils/       # API, PDF, helpers
-│   └── ...
-├── server/          # Node.js + Express backend
-│   ├── prisma/      # DB schema + seed
-│   └── src/
-│       ├── routes/  # API endpoints
-│       ├── middleware/ # Auth + roles
-│       └── utils/   # Email + cron
-└── docker-compose.yml
+│   │   ├── components/
+│   │   │   ├── chatbot/      # Floating chatbot widget
+│   │   │   ├── invoices/     # InvoicePreview, EditorTabs, constants
+│   │   │   └── layout/       # AppLayout, sidebar
+│   │   ├── context/          # AuthContext, LangContext
+│   │   ├── pages/            # All app pages
+│   │   ├── translations/     # fr.json, en.json
+│   │   └── utils/            # api.js, pdf.js, helpers.js
+│   └── vercel.json
+├── server/                   # Express backend
+│   ├── prisma/
+│   │   ├── schema.prisma     # Database models
+│   │   └── seed.js           # Initial data seeding
+│   ├── src/
+│   │   ├── middleware/       # JWT auth middleware
+│   │   ├── routes/           # invoices, clients, quotes, payments...
+│   │   └── utils/            # email, cron jobs
+│   ├── setup.js              # One-command DB setup
+│   └── .env.example
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
-## 👥 User Roles
+## 📄 License
 
-| Role | Permissions |
-|---|---|
-| `admin` | Full access, user management, reports |
-| `sales` | Create/manage invoices, quotes, clients |
-| `accounting` | View all, access reports, payment tracking |
-
----
-
-## 🌐 Features
-
-- ✅ Bilingual FR/EN with toggle in navbar
-- ✅ Two invoice templates (Classic + Modern) with PDF export
-- ✅ Quote management with one-click invoice conversion
-- ✅ CRM: client profiles with status (Active/Inactive/VIP)
-- ✅ Service catalog with quick-add to invoices
-- ✅ Payment tracking with partial payment support
-- ✅ Auto email reminders at Day 7 & 14 after due date
-- ✅ Dashboard with revenue chart + top 5 clients
-- ✅ Monthly/annual reports with CSV export
-- ✅ WhatsApp share with pre-filled message
-- ✅ Floating chatbot widget (bilingual FAQ)
-- ✅ Role-based access control (Admin/Sales/Accounting)
-
----
-
-## 📧 Email Setup (Nodemailer)
-
-In `server/.env`, configure SMTP:
-
-```env
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER="your@gmail.com"
-SMTP_PASS="your_16char_app_password"  # Google App Password
-```
-
-For Gmail: Enable 2FA → Google Account → Security → App Passwords → Generate
-
----
-
-## 📊 Database Schema
-
-Main models: `User`, `Client`, `CatalogItem`, `Invoice`, `InvoiceItem`, `Quote`, `QuoteItem`, `Payment`, `EmailReminder`
-
-See full schema: `server/prisma/schema.prisma`
-
----
-
-## 🔒 Security
-
-- JWT tokens (7-day expiry)
-- bcrypt password hashing (12 rounds)
-- Helmet.js security headers
-- Rate limiting (200 req/15min, 20 auth/15min)
-- CORS restricted to frontend origin
-- Input validation on all routes
-
----
-
-## 📱 WhatsApp Integration
-
-Pre-filled message sends to **+237 653 522 435**:
-
-- FR: *"Bonjour, veuillez trouver ci-joint votre facture SOS DIGITAL #XXXX."*
-- EN: *"Hello, please find attached your SOS DIGITAL invoice #XXXX."*
-
----
-
-## 🔧 Troubleshooting
-
-**Prisma client not initialized:**
-```bash
-cd server && npx prisma generate
-```
-
-**Database connection failed:**
-- Check PostgreSQL is running
-- Verify `DATABASE_URL` password in `server/.env`
-- Create DB manually: `createdb -U postgres sos_digital`
-
-**Port already in use:**
-- Client: change `PORT` in `vite.config.js`
-- Server: change `PORT` in `server/.env`
+MIT — © 2025 SOS DIGITAL / GUEKOUE ARSENE
