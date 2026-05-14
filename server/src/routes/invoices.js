@@ -67,7 +67,11 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { clientId, templateType, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
-    if (!clientId || !items?.length) return res.status(400).json({ error: 'Client et articles requis' });
+    if (!items?.length) return res.status(400).json({ error: 'Articles requis' });
+    
+    // Resolve or create client
+    let resolvedClientId = clientId || null;
+    if (!resolvedClientId) return res.status(400).json({ error: 'Client requis' });
 
     const parsedItems = items.map(i => ({
       description: String(i.description || ''),
@@ -85,10 +89,10 @@ router.post('/', async (req, res) => {
 
     const invoice = await prisma.invoice.create({
       data: {
-        number, clientId, userId: req.user.id,
+        number, clientId: resolvedClientId, userId: req.user.id,
         templateType: templateType || 'classic',
         language: language || 'fr',
-        subtotal, taxRate: tax, taxAmount, discount: disc, total,
+        subtotal: Number(subtotal), taxRate: Number(tax), taxAmount: Number(taxAmount), discount: Number(disc), total: Number(total),
         currency: currency || 'FCFA',
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: notes || null, footer: footer || null,

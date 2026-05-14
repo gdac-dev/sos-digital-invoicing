@@ -51,7 +51,7 @@ export function ClientTab({ client, setClient, clients }) {
   const set = (k, v) => setClient(c => ({ ...c, [k]: v }));
   const handleSelect = (e) => {
     const c = clients.find(x => x.id === e.target.value);
-    if (c) setClient({ name: c.name, address: c.address || '', city: c.city || '', phone: c.phone || '', email: c.email || '' });
+    if (c) setClient({ id: c.id, name: c.name, address: c.address || '', city: c.city || '', phone: c.phone || '', email: c.email || '' });
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

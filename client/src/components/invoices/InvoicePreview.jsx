@@ -163,36 +163,34 @@ export default function InvoicePreview({ company, client, details, sections, ext
               ))}
             </tr>
           </thead>
-          <tbody>
-            {sections.map((sec, si) => (
-              <>
-                {sec.title && (
-                  <tr key={`sec-${si}`} style={{ background: palette.accent + '66' }}>
-                    <td colSpan={6} style={{ padding: '5px 8px', fontWeight: 700, fontSize: 9.5, color: palette.dark }}>{sec.title}</td>
+          {sections.map((sec, si) => (
+            <tbody key={`sec-body-${si}`}>
+              {sec.title && (
+                <tr key={`sec-title-${si}`} style={{ background: palette.accent + '66' }}>
+                  <td colSpan={6} style={{ padding: '5px 8px', fontWeight: 700, fontSize: 9.5, color: palette.dark }}>{sec.title}</td>
+                </tr>
+              )}
+              {sec.items.map((item, ii) => {
+                const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
+                return (
+                  <tr key={`item-${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc' }}>
+                    <td style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 8.5 }}>{ii + 1}</td>
+                    <td style={{ padding: '5px 8px', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>Description...</span>}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.unit}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.qty}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{fmtN(item.unitPrice)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, fontSize: 9 }}>{fmtN(lineTotal)}</td>
                   </tr>
-                )}
-                {sec.items.map((item, ii) => {
-                  const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
-                  return (
-                    <tr key={`${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc' }}>
-                      <td style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 8.5 }}>{ii + 1}</td>
-                      <td style={{ padding: '5px 8px', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>Description...</span>}</td>
-                      <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.unit}</td>
-                      <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.qty}</td>
-                      <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{fmtN(item.unitPrice)}</td>
-                      <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, fontSize: 9 }}>{fmtN(lineTotal)}</td>
-                    </tr>
-                  );
-                })}
-                {sec.title && sections.length > 1 && (
-                  <tr key={`sub-${si}`} style={{ background: palette.accent + '88' }}>
-                    <td colSpan={5} style={{ padding: '4px 8px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>Sous-total {sec.title}</td>
-                    <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si])}</td>
-                  </tr>
-                )}
-              </>
-            ))}
-          </tbody>
+                );
+              })}
+              {sec.title && sections.length > 1 && (
+                <tr key={`sub-${si}`} style={{ background: palette.accent + '88' }}>
+                  <td colSpan={5} style={{ padding: '4px 8px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>Sous-total {sec.title}</td>
+                  <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si])}</td>
+                </tr>
+              )}
+            </tbody>
+          ))}
         </table>
 
         {/* Totals box */}

@@ -67,21 +67,21 @@ export default function InvoiceEditor() {
   };
 
   const handleSave = async () => {
-    if (!client.name) return toast.error(lang === 'fr' ? 'Nom du client requis' : 'Client name required');
+    if (!client.id) return toast.error(lang === 'fr' ? 'Sélectionnez un client depuis le CRM (onglet Client)' : 'Select a client from CRM (Client tab)');
     const allItems = sections.flatMap(s => s.items.filter(i => i.description?.trim()));
     if (!allItems.length) return toast.error(lang === 'fr' ? 'Ajoutez au moins une prestation' : 'Add at least one service');
     setSaving(true);
     try {
       await api.post('/invoices', {
-        clientId: clients.find(c => c.name === client.name)?.id || null,
+        clientId: client.id,
         templateType: design.template, language: details.language,
-        taxRate: extras.taxRate, discount: extras.discount,
+        taxRate: Number(extras.taxRate), discount: Number(extras.discount),
         currency: details.currency, dueDate: details.dueDate || null,
         notes: notes.conditions, footer: notes.footer,
         items: allItems.map(i => ({
           description: i.description,
-          quantity: parseFloat(i.qty) || 1,
-          unitPrice: parseFloat(i.unitPrice) || 0,
+          quantity: Number(parseFloat(i.qty) || 1),
+          unitPrice: Number(parseFloat(i.unitPrice) || 0),
         })),
       });
       toast.success(lang === 'fr' ? 'Facture créée !' : 'Invoice created!');
