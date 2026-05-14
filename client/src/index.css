@@ -306,3 +306,62 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
 .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
 .empty-state h3 { font-size: 16px; margin-bottom: 6px; color: var(--text); }
+
+/* Pulse animation for chatbot badge */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+/* Responsive — Mobile */
+@media (max-width: 900px) {
+  /* Sidebar */
+  .sidebar { position: fixed; left: -260px; top: 0; bottom: 0; z-index: 200; transition: left 0.3s ease; width: 240px !important; }
+  .sidebar.open { left: 0; box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
+  .main-area { margin-left: 0 !important; }
+  
+  /* Content padding */
+  .page-content { padding: 14px 12px; }
+  
+  /* Topbar hamburger always visible */
+  .topbar { padding: 0 14px; }
+  
+  /* Grids */
+  .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-3 { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metrics-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  
+  /* Modal */
+  .modal { max-width: 96vw; margin: 0 8px; padding: 18px; }
+  .modal-lg { max-width: 96vw; }
+  
+  /* Tables — horizontal scroll */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 600px; }
+  
+  /* Page header stack */
+  .page-header { flex-wrap: wrap; gap: 10px; }
+  .page-title { font-size: 18px; }
+  
+  /* Cards */
+  .card { padding: 14px; }
+  
+  /* Chatbot panel width */
+  div[style*="width: 340px"] { width: calc(100vw - 32px) !important; right: 8px !important; }
+}
+
+@media (max-width: 480px) {
+  .grid-3 { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: 1fr !important; }
+  .page-title { font-size: 16px; }
+  .btn { padding: 7px 12px; font-size: 12px; }
+  .topbar { height: 52px; }
+  .lang-btn { padding: 4px 8px; font-size: 11px; }
+  
+  /* Hide some table columns on very small screens */
+  .hide-mobile { display: none !important; }
+}
+
+/* Card small variant */
+.card-sm { padding: 14px; }
+

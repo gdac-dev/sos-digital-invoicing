@@ -1,6 +1,7 @@
 import { PALETTES, FONTS, TEMPLATES, WATERMARK_STYLES, WATERMARK_POSITIONS, CURRENCIES, PAYMENT_METHODS, UNITS, EMPTY_SECTION, EMPTY_ITEM } from './editorConstants';
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { useLang } from '../../context/LangContext';
 
 // Reusable slider
 const Slider = ({ label, value, onChange, min = 0, max = 100, unit = '%' }) => (
@@ -16,6 +17,7 @@ const Slider = ({ label, value, onChange, min = 0, max = 100, unit = '%' }) => (
 
 // ---------- TAB: Entreprise ----------
 export function EntrepriseTab({ company, setCompany }) {
+  const { lang } = useLang();
   const set = (k, v) => setCompany(c => ({ ...c, [k]: v }));
   const handleLogo = (e) => {
     const file = e.target.files[0];
@@ -29,7 +31,7 @@ export function EntrepriseTab({ company, setCompany }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px', background: 'var(--bg3)', borderRadius: 10, marginBottom: 4 }}>
         <img src={company.logo} alt="Logo" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: '2px solid var(--primary)' }} onError={e => e.target.style.display='none'} />
         <div>
-          <label className="form-label" style={{ margin: 0 }}>Logo entreprise</label>
+          <label className="form-label" style={{ margin: 0 }}>{lang === 'fr' ? 'Logo entreprise' : 'Company logo'}</label>
           <input type="file" accept="image/*" onChange={handleLogo} style={{ fontSize: 11, marginTop: 4, display: 'block' }} />
         </div>
       </div>
@@ -45,6 +47,7 @@ export function EntrepriseTab({ company, setCompany }) {
 
 // ---------- TAB: Client ----------
 export function ClientTab({ client, setClient, clients }) {
+  const { lang } = useLang();
   const set = (k, v) => setClient(c => ({ ...c, [k]: v }));
   const handleSelect = (e) => {
     const c = clients.find(x => x.id === e.target.value);
@@ -53,9 +56,9 @@ export function ClientTab({ client, setClient, clients }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Importer depuis CRM</label>
+        <label className="form-label">{lang === 'fr' ? 'Importer depuis CRM' : 'Import from CRM'}</label>
         <select className="form-control" onChange={handleSelect} defaultValue="">
-          <option value="">— Choisir un client existant —</option>
+          <option value="">{lang === 'fr' ? '— Choisir un client existant —' : '— Select existing client —'}</option>
           {clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
         </select>
       </div>
@@ -72,33 +75,34 @@ export function ClientTab({ client, setClient, clients }) {
 
 // ---------- TAB: Détails ----------
 export function DetailsTab({ details, setDetails }) {
+  const { lang } = useLang();
   const set = (k, v) => setDetails(d => ({ ...d, [k]: v }));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Numéro</label>
-        <input className="form-control" placeholder="Auto-généré" value={details.number} onChange={e => set('number', e.target.value)} />
+        <label className="form-label">{lang === 'fr' ? 'Numéro' : 'Number'}</label>
+        <input className="form-control" placeholder={lang === 'fr' ? 'Auto-généré' : 'Auto-generated'} value={details.number} onChange={e => set('number', e.target.value)} />
       </div>
       <div className="grid-2" style={{ gap: 10 }}>
-        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Date</label><input type="date" className="form-control" value={details.date} onChange={e => set('date', e.target.value)} /></div>
-        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Validité (jours)</label><input type="number" className="form-control" value={details.validity} onChange={e => set('validity', e.target.value)} /></div>
-        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Échéance</label><input type="date" className="form-control" value={details.dueDate} onChange={e => set('dueDate', e.target.value)} /></div>
-        <div className="form-group" style={{ margin: 0 }}><label className="form-label">Référence</label><input className="form-control" value={details.reference} onChange={e => set('reference', e.target.value)} /></div>
+        <div className="form-group" style={{ margin: 0 }}><label className="form-label">{lang === 'fr' ? 'Date' : 'Date'}</label><input type="date" className="form-control" value={details.date} onChange={e => set('date', e.target.value)} /></div>
+        <div className="form-group" style={{ margin: 0 }}><label className="form-label">{lang === 'fr' ? 'Validité (jours)' : 'Validity (days)'}</label><input type="number" className="form-control" value={details.validity} onChange={e => set('validity', e.target.value)} /></div>
+        <div className="form-group" style={{ margin: 0 }}><label className="form-label">{lang === 'fr' ? 'Échéance' : 'Due Date'}</label><input type="date" className="form-control" value={details.dueDate} onChange={e => set('dueDate', e.target.value)} /></div>
+        <div className="form-group" style={{ margin: 0 }}><label className="form-label">{lang === 'fr' ? 'Référence' : 'Reference'}</label><input className="form-control" value={details.reference} onChange={e => set('reference', e.target.value)} /></div>
       </div>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Mode de paiement</label>
+        <label className="form-label">{lang === 'fr' ? 'Mode de paiement' : 'Payment Method'}</label>
         <select className="form-control" value={details.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
           {PAYMENT_METHODS.map(m => <option key={m}>{m}</option>)}
         </select>
       </div>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Devise</label>
+        <label className="form-label">{lang === 'fr' ? 'Devise' : 'Currency'}</label>
         <select className="form-control" value={details.currency} onChange={e => set('currency', e.target.value)}>
           {CURRENCIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Langue du document</label>
+        <label className="form-label">{lang === 'fr' ? 'Langue du document' : 'Document Language'}</label>
         <select className="form-control" value={details.language} onChange={e => set('language', e.target.value)}>
           <option value="fr">Français</option><option value="en">English</option>
         </select>
@@ -109,6 +113,7 @@ export function DetailsTab({ details, setDetails }) {
 
 // ---------- TAB: Prestations ----------
 export function PrestationsTab({ sections, setSections, catalog, extras, setExtras }) {
+  const { lang } = useLang();
   const [collapsed, setCollapsed] = useState({});
 
   const addSection = () => setSections(s => [...s, { ...EMPTY_SECTION, title: `Section ${s.length + 1}`, items: [{ ...EMPTY_ITEM }] }]);
@@ -132,11 +137,11 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
           {!collapsed[si] && (
             <div style={{ padding: '10px 12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 80px 90px 28px', gap: 4, marginBottom: 4 }}>
-                {['Description','Unité','Qté','Prix unit.',''].map(h => <div key={h} style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</div>)}
+                {(lang === 'fr' ? ['Description','Unité','Qté','Prix unit.',''] : ['Description','Unit','Qty','Unit price','']).map(h => <div key={h} style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</div>)}
               </div>
               {sec.items.map((item, ii) => (
                 <div key={ii} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 80px 90px 28px', gap: 4, marginBottom: 4, alignItems: 'center' }}>
-                  <input className="form-control" style={{ padding: '5px 8px', fontSize: 12 }} value={item.description} onChange={e => setItemField(si, ii, 'description', e.target.value)} placeholder="Prestation..." />
+                  <input className="form-control" style={{ padding: '5px 8px', fontSize: 12 }} value={item.description} onChange={e => setItemField(si, ii, 'description', e.target.value)} placeholder={lang === 'fr' ? 'Prestation...' : 'Service...'} />
                   <select className="form-control" style={{ padding: '5px 4px', fontSize: 11 }} value={item.unit} onChange={e => setItemField(si, ii, 'unit', e.target.value)}>
                     {UNITS.map(u => <option key={u}>{u}</option>)}
                   </select>
@@ -145,16 +150,16 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
                   <button className="btn-icon" onClick={() => removeItem(si, ii)}><Trash2 size={12} style={{ color: 'var(--danger)' }}/></button>
                 </div>
               ))}
-              <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, marginTop: 4 }} onClick={() => addItem(si)}><Plus size={11}/>Ajouter une ligne</button>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, marginTop: 4 }} onClick={() => addItem(si)}><Plus size={11}/>{lang === 'fr' ? 'Ajouter une ligne' : 'Add line'}</button>
             </div>
           )}
         </div>
       ))}
-      <button className="btn btn-ghost btn-sm" style={{ width: '100%', marginBottom: 12 }} onClick={addSection}><Plus size={13}/>Ajouter une section</button>
+      <button className="btn btn-ghost btn-sm" style={{ width: '100%', marginBottom: 12 }} onClick={addSection}><Plus size={13}/>{lang === 'fr' ? 'Ajouter une section' : 'Add section'}</button>
 
       {catalog.length > 0 && (
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Catalogue rapide</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>{lang === 'fr' ? 'Catalogue rapide' : 'Quick catalog'}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {catalog.map(c => (
               <button key={c.id} className="btn btn-ghost btn-sm" style={{ fontSize: 10 }}
@@ -168,8 +173,8 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
 
       {/* Main-d'oeuvre & frais supplémentaires */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 4 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Ajustements</div>
-        {[['labour',"Main-d'œuvre (FCFA)"], ['extra','Frais supplémentaires (FCFA)'], ['discount','Remise (FCFA)'], ['taxRate','TVA (%)']].map(([k, lbl]) => (
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>{lang === 'fr' ? 'Ajustements' : 'Adjustments'}</div>
+        {(lang === 'fr' ? [['labour',"Main-d'œuvre (FCFA)"],['extra','Frais supplémentaires (FCFA)'],['discount','Remise (FCFA)'],['taxRate','TVA (%)']] : [['labour','Labour (FCFA)'],['extra','Extra charges (FCFA)'],['discount','Discount (FCFA)'],['taxRate','VAT (%)']]).map(([k, lbl]) => (
           <div key={k} className="form-group" style={{ margin: '0 0 8px' }}>
             <label className="form-label">{lbl}</label>
             <input type="number" className="form-control" min="0" value={extras[k] || 0} onChange={e => setExtras(ex => ({ ...ex, [k]: parseFloat(e.target.value) || 0 }))} />
@@ -182,15 +187,16 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
 
 // ---------- TAB: Notes ----------
 export function NotesTab({ notes, setNotes }) {
+  const { lang } = useLang();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Conditions et notes</label>
-        <textarea className="form-control" rows={5} placeholder="Conditions de paiement, délais, garanties..." value={notes.conditions} onChange={e => setNotes(n => ({ ...n, conditions: e.target.value }))} />
+        <label className="form-label">{lang === 'fr' ? 'Conditions et notes' : 'Terms and notes'}</label>
+        <textarea className="form-control" rows={5} placeholder={lang === 'fr' ? 'Conditions de paiement, délais, garanties...' : 'Payment terms, deadlines, warranties...'} value={notes.conditions} onChange={e => setNotes(n => ({ ...n, conditions: e.target.value }))} />
       </div>
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label">Note de bas de page</label>
-        <textarea className="form-control" rows={2} placeholder="Merci de votre confiance..." value={notes.footer} onChange={e => setNotes(n => ({ ...n, footer: e.target.value }))} />
+        <label className="form-label">{lang === 'fr' ? 'Note de bas de page' : 'Footer note'}</label>
+        <textarea className="form-control" rows={2} placeholder={lang === 'fr' ? 'Merci de votre confiance...' : 'Thank you for your business...'} value={notes.footer} onChange={e => setNotes(n => ({ ...n, footer: e.target.value }))} />
       </div>
     </div>
   );
@@ -198,6 +204,7 @@ export function NotesTab({ notes, setNotes }) {
 
 // ---------- TAB: Design ----------
 export function DesignTab({ design, setDesign }) {
+  const { lang } = useLang();
   const set = (k, v) => setDesign(d => ({ ...d, [k]: v }));
   const setWm = (k, v) => setDesign(d => ({ ...d, watermark: { ...d.watermark, [k]: v } }));
   const setStamp = (k, v) => setDesign(d => ({ ...d, stamp: { ...d.stamp, [k]: v } }));
@@ -215,17 +222,17 @@ export function DesignTab({ design, setDesign }) {
       {/* Document settings */}
       <Section title="Document">
         <div className="form-group" style={{ margin: '0 0 10px' }}>
-          <label className="form-label">Titre principal du document</label>
+          <label className="form-label">{lang === 'fr' ? 'Titre principal du document' : 'Document main title'}</label>
           <input className="form-control" value={design.docTitle} onChange={e => set('docTitle', e.target.value)} placeholder="FACTURE, DEVIS, PROFORMA..." />
         </div>
         <div className="form-group" style={{ margin: '0 0 10px' }}>
-          <label className="form-label">Style de modèle</label>
+          <label className="form-label">{lang === 'fr' ? 'Style de modèle' : 'Template style'}</label>
           <select className="form-control" value={design.template} onChange={e => set('template', e.target.value)}>
             {Object.entries(TEMPLATES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
         <div className="form-group" style={{ margin: '0 0 10px' }}>
-          <label className="form-label">Police</label>
+          <label className="form-label">{lang === 'fr' ? 'Police' : 'Font'}</label>
           <select className="form-control" value={design.font} onChange={e => set('font', e.target.value)}>
             {FONTS.map(f => <option key={f}>{f}</option>)}
           </select>
@@ -233,7 +240,7 @@ export function DesignTab({ design, setDesign }) {
       </Section>
 
       {/* Palette */}
-      <Section title="🎨 Palette de couleurs">
+      <Section title={lang === 'fr' ? '🎨 Palette de couleurs' : '🎨 Color palette'}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {Object.entries(PALETTES).map(([k, p]) => (
             <button key={k} onClick={() => set('palette', k)} style={{
@@ -249,22 +256,22 @@ export function DesignTab({ design, setDesign }) {
       </Section>
 
       {/* Filigrane */}
-      <Section title="🖼️ Filigrane personnalisé">
+      <Section title={lang === 'fr' ? '🖼️ Filigrane personnalisé' : '🖼️ Custom watermark'}>
         <div className="form-group" style={{ margin: '0 0 10px' }}>
-          <label className="form-label">Type</label>
+          <label className="form-label">{lang === 'fr' ? 'Type' : 'Type'}</label>
           <select className="form-control" value={design.watermark.type} onChange={e => setWm('type', e.target.value)}>
-            <option value="none">Aucun</option>
-            <option value="text">Texte</option>
+            <option value="none">{lang === 'fr' ? 'Aucun' : 'None'}</option>
+            <option value="text">{lang === 'fr' ? 'Texte' : 'Text'}</option>
             <option value="image">Image</option>
           </select>
         </div>
         {design.watermark.type === 'text' && <>
           <div className="form-group" style={{ margin: '0 0 10px' }}>
-            <label className="form-label">Texte</label>
-            <input className="form-control" value={design.watermark.text} onChange={e => setWm('text', e.target.value)} placeholder="ex: BROUILLON, PAYÉ, CONFIDENTIEL..." />
+            <label className="form-label">{lang === 'fr' ? 'Texte' : 'Text'}</label>
+            <input className="form-control" value={design.watermark.text} onChange={e => setWm('text', e.target.value)} placeholder={lang === 'fr' ? 'ex: BROUILLON, PAYÉ, CONFIDENTIEL...' : 'ex: DRAFT, PAID, CONFIDENTIAL...'} />
           </div>
           <div className="form-group" style={{ margin: '0 0 10px' }}>
-            <label className="form-label">Style</label>
+            <label className="form-label">{lang === 'fr' ? 'Style' : 'Style'}</label>
             <select className="form-control" value={design.watermark.style} onChange={e => setWm('style', e.target.value)}>
               {WATERMARK_STYLES.map(s => <option key={s}>{s}</option>)}
             </select>
@@ -272,20 +279,20 @@ export function DesignTab({ design, setDesign }) {
         </>}
         {design.watermark.type !== 'none' && <>
           <div className="form-group" style={{ margin: '0 0 10px' }}>
-            <label className="form-label">Position</label>
+            <label className="form-label">{lang === 'fr' ? 'Position' : 'Position'}</label>
             <select className="form-control" value={design.watermark.position} onChange={e => setWm('position', e.target.value)}>
               {WATERMARK_POSITIONS.map(p => <option key={p}>{p}</option>)}
             </select>
           </div>
-          <Slider label="Taille" value={design.watermark.size} onChange={v => setWm('size', v)} min={20} max={200} unit="px" />
-          <Slider label="Opacité" value={design.watermark.opacity} onChange={v => setWm('opacity', v)} />
+          <Slider label={lang === 'fr' ? 'Taille' : 'Size'} value={design.watermark.size} onChange={v => setWm('size', v)} min={20} max={200} unit="px" />
+          <Slider label={lang === 'fr' ? 'Opacité' : 'Opacity'} value={design.watermark.opacity} onChange={v => setWm('opacity', v)} />
         </>}
       </Section>
 
       {/* Tampon */}
-      <Section title="🖋️ Tampon personnalisé">
+      <Section title={lang === 'fr' ? '🖋️ Tampon personnalisé' : '🖋️ Custom stamp'}>
         <div className="form-group" style={{ margin: '0 0 10px' }}>
-          <label className="form-label">Image du tampon <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>(PNG recommandé 150×150px)</span></label>
+          <label className="form-label">{lang === 'fr' ? 'Image du tampon' : 'Stamp image'} <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>(PNG 150×150px)</span></label>
           <input type="file" accept="image/*" onChange={handleStampFile} />
         </div>
         {design.stamp.image && (
@@ -293,16 +300,16 @@ export function DesignTab({ design, setDesign }) {
             <img src={design.stamp.image} alt="Tampon" style={{ width: design.stamp.size * 0.6, height: design.stamp.size * 0.6, objectFit: 'contain', opacity: design.stamp.opacity / 100, border: '1px dashed var(--border)', borderRadius: 8 }} />
           </div>
         )}
-        <Slider label="Taille du tampon" value={design.stamp.size} onChange={v => setStamp('size', v)} min={50} max={300} unit="px" />
-        <Slider label="Opacité du tampon" value={design.stamp.opacity} onChange={v => setStamp('opacity', v)} />
+        <Slider label={lang === 'fr' ? 'Taille du tampon' : 'Stamp size'} value={design.stamp.size} onChange={v => setStamp('size', v)} min={50} max={300} unit="px" />
+        <Slider label={lang === 'fr' ? 'Opacité du tampon' : 'Stamp opacity'} value={design.stamp.opacity} onChange={v => setStamp('opacity', v)} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button className={`btn btn-sm ${design.stamp.placing ? 'btn-primary' : 'btn-ghost'}`} style={{ flex: 1, fontSize: 11 }}
             onClick={() => setStamp('placing', !design.stamp.placing)}>
-            {design.stamp.placing ? '✓ Mode actif (cliquez sur l\'aperçu)' : 'Positionner le tampon'}
+            {design.stamp.placing ? (lang === 'fr' ? '✓ Mode actif (cliquez sur l\'aperçu)' : '✓ Active (click on preview)') : (lang === 'fr' ? 'Positionner le tampon' : 'Position stamp')}
           </button>
           {design.stamp.image && (
             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: 11 }}
-              onClick={() => setStamp('image', null)}>Supprimer</button>
+              onClick={() => setStamp('image', null)}>{lang === 'fr' ? 'Supprimer' : 'Remove'}</button>
           )}
         </div>
       </Section>
@@ -311,6 +318,7 @@ export function DesignTab({ design, setDesign }) {
 }
 
 function Section({ title, children }) {
+  const { lang } = useLang();
   const [open, setOpen] = useState(true);
   return (
     <div style={{ borderBottom: '1px solid var(--border)', marginBottom: 0 }}>
