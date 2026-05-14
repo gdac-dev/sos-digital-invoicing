@@ -1,0 +1,89 @@
+{
+  "name": "fr",
+  "app": { "title": "SOS DIGITAL", "subtitle": "Facturation & Gestion Commerciale" },
+  "nav": {
+    "dashboard": "Tableau de bord", "invoices": "Factures", "quotes": "Devis",
+    "clients": "Clients", "catalog": "Catalogue", "payments": "Paiements",
+    "reports": "Rapports", "settings": "Paramètres", "logout": "Déconnexion"
+  },
+  "auth": {
+    "login": "Connexion", "email": "Adresse email", "password": "Mot de passe",
+    "loginBtn": "Se connecter", "loginError": "Identifiants invalides",
+    "welcome": "Bienvenue", "loginSubtitle": "Connectez-vous à votre espace"
+  },
+  "dashboard": {
+    "title": "Tableau de bord", "totalRevenue": "Revenus totaux",
+    "paidInvoices": "Factures payées", "pendingInvoices": "En attente",
+    "overdueInvoices": "En retard", "monthRevenue": "Revenus ce mois",
+    "topClients": "Top 5 Clients", "recentInvoices": "Factures récentes",
+    "monthlyChart": "Évolution mensuelle des revenus",
+    "conversionRate": "Taux de conversion devis", "activeClients": "Clients actifs"
+  },
+  "invoice": {
+    "title": "Factures", "new": "Nouvelle facture", "number": "Numéro",
+    "client": "Client", "date": "Date", "dueDate": "Échéance",
+    "amount": "Montant", "status": "Statut", "actions": "Actions",
+    "template": "Modèle", "classic": "Classique Professionnel", "modern": "Moderne Minimaliste",
+    "preview": "Aperçu", "export": "Exporter PDF", "send": "Envoyer",
+    "whatsapp": "Partager WhatsApp", "language": "Langue du document",
+    "subtotal": "Sous-total", "tax": "TVA", "discount": "Remise",
+    "total": "Total TTC", "notes": "Notes", "footer": "Pied de page",
+    "addItem": "Ajouter un article", "description": "Description",
+    "qty": "Qté", "unitPrice": "Prix unitaire", "lineTotal": "Total",
+    "save": "Enregistrer", "cancel": "Annuler", "delete": "Supprimer",
+    "confirmDelete": "Supprimer cette facture ?",
+    "shareMsg": "Bonjour, veuillez trouver ci-joint votre facture SOS DIGITAL #"
+  },
+  "status": {
+    "draft": "Brouillon", "sent": "Envoyée", "viewed": "Consultée",
+    "paid": "Payée", "overdue": "En retard", "canceled": "Annulée",
+    "active": "Actif", "inactive": "Inactif", "vip": "VIP",
+    "accepted": "Accepté", "declined": "Refusé", "expired": "Expiré",
+    "converted": "Converti"
+  },
+  "quote": {
+    "title": "Devis", "new": "Nouveau devis", "number": "Numéro",
+    "validity": "Validité", "convertToInvoice": "Convertir en facture",
+    "converted": "Converti en facture"
+  },
+  "client": {
+    "title": "Clients", "new": "Nouveau client", "name": "Nom complet",
+    "company": "Entreprise", "email": "Email", "phone": "Téléphone",
+    "address": "Adresse", "city": "Ville", "country": "Pays",
+    "taxId": "N° fiscal", "status": "Statut", "notes": "Notes",
+    "search": "Rechercher un client...", "invoiceHistory": "Historique factures"
+  },
+  "catalog": {
+    "title": "Catalogue de services", "new": "Nouveau service",
+    "name": "Nom du service", "description": "Description",
+    "unitPrice": "Prix unitaire", "category": "Catégorie",
+    "addToInvoice": "Ajouter à la facture"
+  },
+  "payment": {
+    "title": "Paiements", "add": "Enregistrer un paiement",
+    "amount": "Montant", "method": "Mode de paiement",
+    "date": "Date", "notes": "Notes", "partial": "Paiement partiel",
+    "methods": { "cash": "Espèces", "bank": "Virement", "mobile": "Mobile Money", "check": "Chèque", "card": "Carte" }
+  },
+  "report": {
+    "title": "Rapports", "period": "Période", "from": "Du", "to": "Au",
+    "exportPDF": "Exporter PDF", "exportExcel": "Exporter Excel",
+    "summary": "Résumé annuel", "year": "Année",
+    "totalInvoiced": "Total facturé", "totalCollected": "Total encaissé"
+  },
+  "settings": {
+    "title": "Paramètres", "users": "Utilisateurs", "newUser": "Nouvel utilisateur",
+    "name": "Nom", "email": "Email", "role": "Rôle", "password": "Mot de passe",
+    "canView": "Peut voir les données", "active": "Actif",
+    "roles": { "admin": "Administrateur", "sales": "Commercial", "accounting": "Comptabilité" }
+  },
+  "common": {
+    "search": "Rechercher", "save": "Enregistrer", "cancel": "Annuler",
+    "delete": "Supprimer", "edit": "Modifier", "view": "Voir",
+    "confirm": "Confirmer", "close": "Fermer", "loading": "Chargement...",
+    "noData": "Aucune donnée", "of": "sur", "page": "Page",
+    "actions": "Actions", "yes": "Oui", "no": "Non",
+    "success": "Succès", "error": "Erreur", "warning": "Attention",
+    "currency": "FCFA", "all": "Tous"
+  }
+}

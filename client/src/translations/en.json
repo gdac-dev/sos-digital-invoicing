@@ -1,0 +1,89 @@
+{
+  "name": "en",
+  "app": { "title": "SOS DIGITAL", "subtitle": "Invoicing & Business Management" },
+  "nav": {
+    "dashboard": "Dashboard", "invoices": "Invoices", "quotes": "Quotes",
+    "clients": "Clients", "catalog": "Catalog", "payments": "Payments",
+    "reports": "Reports", "settings": "Settings", "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login", "email": "Email address", "password": "Password",
+    "loginBtn": "Sign in", "loginError": "Invalid credentials",
+    "welcome": "Welcome back", "loginSubtitle": "Sign in to your workspace"
+  },
+  "dashboard": {
+    "title": "Dashboard", "totalRevenue": "Total Revenue",
+    "paidInvoices": "Paid Invoices", "pendingInvoices": "Pending",
+    "overdueInvoices": "Overdue", "monthRevenue": "Monthly Revenue",
+    "topClients": "Top 5 Clients", "recentInvoices": "Recent Invoices",
+    "monthlyChart": "Monthly Revenue Trend",
+    "conversionRate": "Quote Conversion Rate", "activeClients": "Active Clients"
+  },
+  "invoice": {
+    "title": "Invoices", "new": "New Invoice", "number": "Number",
+    "client": "Client", "date": "Date", "dueDate": "Due Date",
+    "amount": "Amount", "status": "Status", "actions": "Actions",
+    "template": "Template", "classic": "Classic Professional", "modern": "Modern Minimalist",
+    "preview": "Preview", "export": "Export PDF", "send": "Send",
+    "whatsapp": "Share WhatsApp", "language": "Document Language",
+    "subtotal": "Subtotal", "tax": "VAT", "discount": "Discount",
+    "total": "Grand Total", "notes": "Notes", "footer": "Footer",
+    "addItem": "Add item", "description": "Description",
+    "qty": "Qty", "unitPrice": "Unit Price", "lineTotal": "Total",
+    "save": "Save", "cancel": "Cancel", "delete": "Delete",
+    "confirmDelete": "Delete this invoice?",
+    "shareMsg": "Hello, please find attached your SOS DIGITAL invoice #"
+  },
+  "status": {
+    "draft": "Draft", "sent": "Sent", "viewed": "Viewed",
+    "paid": "Paid", "overdue": "Overdue", "canceled": "Canceled",
+    "active": "Active", "inactive": "Inactive", "vip": "VIP",
+    "accepted": "Accepted", "declined": "Declined", "expired": "Expired",
+    "converted": "Converted"
+  },
+  "quote": {
+    "title": "Quotes", "new": "New Quote", "number": "Number",
+    "validity": "Validity", "convertToInvoice": "Convert to Invoice",
+    "converted": "Converted to Invoice"
+  },
+  "client": {
+    "title": "Clients", "new": "New Client", "name": "Full Name",
+    "company": "Company", "email": "Email", "phone": "Phone",
+    "address": "Address", "city": "City", "country": "Country",
+    "taxId": "Tax ID", "status": "Status", "notes": "Notes",
+    "search": "Search clients...", "invoiceHistory": "Invoice History"
+  },
+  "catalog": {
+    "title": "Service Catalog", "new": "New Service",
+    "name": "Service Name", "description": "Description",
+    "unitPrice": "Unit Price", "category": "Category",
+    "addToInvoice": "Add to Invoice"
+  },
+  "payment": {
+    "title": "Payments", "add": "Record Payment",
+    "amount": "Amount", "method": "Payment Method",
+    "date": "Date", "notes": "Notes", "partial": "Partial payment",
+    "methods": { "cash": "Cash", "bank": "Bank Transfer", "mobile": "Mobile Money", "check": "Cheque", "card": "Card" }
+  },
+  "report": {
+    "title": "Reports", "period": "Period", "from": "From", "to": "To",
+    "exportPDF": "Export PDF", "exportExcel": "Export Excel",
+    "summary": "Annual Summary", "year": "Year",
+    "totalInvoiced": "Total Invoiced", "totalCollected": "Total Collected"
+  },
+  "settings": {
+    "title": "Settings", "users": "Users", "newUser": "New User",
+    "name": "Name", "email": "Email", "role": "Role", "password": "Password",
+    "canView": "Can view data", "active": "Active",
+    "roles": { "admin": "Administrator", "sales": "Sales", "accounting": "Accounting" }
+  },
+  "common": {
+    "search": "Search", "save": "Save", "cancel": "Cancel",
+    "delete": "Delete", "edit": "Edit", "view": "View",
+    "confirm": "Confirm", "close": "Close", "loading": "Loading...",
+    "noData": "No data found", "of": "of", "page": "Page",
+    "actions": "Actions", "yes": "Yes", "no": "No",
+    "success": "Success", "error": "Error", "warning": "Warning",
+    "currency": "FCFA", "all": "All"
+  }
+}

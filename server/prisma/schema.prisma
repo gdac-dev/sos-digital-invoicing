@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  password    String
+  role        Role      @default(sales)
+  canViewData Boolean   @default(true)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoices    Invoice[]
+  quotes      Quote[]
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  country   String    @default("Cameroun")
+  taxId     String?
+  status    ClientStatus @default(active)
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  invoices  Invoice[]
+  quotes    Quote[]
+}
+
+model CatalogItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  unitPrice   Float
+  currency    String   @default("FCFA")
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoiceItems InvoiceItem[]
+}
+
+model Invoice {
+  id           String        @id @default(uuid())
+  number       String        @unique
+  clientId     String
+  userId       String
+  templateType TemplateType  @default(classic)
+  status       InvoiceStatus @default(draft)
+  language     String        @default("fr")
+  subtotal     Float         @default(0)
+  taxRate      Float         @default(0)
+  taxAmount    Float         @default(0)
+  discount     Float         @default(0)
+  total        Float         @default(0)
+  currency     String        @default("FCFA")
+  issueDate    DateTime      @default(now())
+  dueDate      DateTime?
+  notes        String?
+  footer       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  client       Client        @relation(fields: [clientId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  items        InvoiceItem[]
+  payments     Payment[]
+  reminders    EmailReminder[]
+  convertedFrom Quote?
+}
+
+model InvoiceItem {
+  id            String       @id @default(uuid())
+  invoiceId     String
+  catalogItemId String?
+  description   String
+  quantity      Float        @default(1)
+  unitPrice     Float
+  total         Float
+
+  invoice       Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  catalogItem   CatalogItem? @relation(fields: [catalogItemId], references: [id])
+}
+
+model Quote {
+  id                 String      @id @default(uuid())
+  number             String      @unique
+  clientId           String
+  userId             String
+  templateType       TemplateType @default(classic)
+  status             QuoteStatus  @default(draft)
+  language           String       @default("fr")
+  subtotal           Float        @default(0)
+  taxRate            Float        @default(0)
+  taxAmount          Float        @default(0)
+  discount           Float        @default(0)
+  total              Float        @default(0)
+  currency           String       @default("FCFA")
+  issueDate          DateTime     @default(now())
+  validUntil         DateTime?
+  notes              String?
+  convertedInvoiceId String?      @unique
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  client             Client       @relation(fields: [clientId], references: [id])
+  user               User         @relation(fields: [userId], references: [id])
+  items              QuoteItem[]
+  convertedInvoice   Invoice?     @relation(fields: [convertedInvoiceId], references: [id])
+}
+
+model QuoteItem {
+  id          String  @id @default(uuid())
+  quoteId     String
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  total       Float
+
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  invoiceId String
+  amount    Float
+  method    String   @default("cash")
+  date      DateTime @default(now())
+  notes     String?
+  isPartial Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model EmailReminder {
+  id        String       @id @default(uuid())
+  invoiceId String
+  type      ReminderType
+  sentAt    DateTime     @default(now())
+
+  invoice   Invoice      @relation(fields: [invoiceId], references: [id])
+}
+
+enum Role {
+  admin
+  sales
+  accounting
+}
+
+enum ClientStatus {
+  active
+  inactive
+  vip
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  viewed
+  paid
+  overdue
+  canceled
+}
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  declined
+  expired
+  converted
+}
+
+enum TemplateType {
+  classic
+  modern
+}
+
+enum ReminderType {
+  day7
+  day14
+}
