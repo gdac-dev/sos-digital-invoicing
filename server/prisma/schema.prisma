@@ -190,6 +190,8 @@ enum QuoteStatus {
 enum TemplateType {
   classic
   modern
+  elegant
+  minimalist
 }
 
 enum ReminderType {

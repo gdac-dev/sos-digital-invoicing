@@ -173,8 +173,8 @@ export default function InvoicePreview({ company, client, details, sections, ext
               {sec.items.map((item, ii) => {
                 const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
                 return (
-                  <tr key={`item-${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc' }}>
-                    <td style={{ padding: '5px 8px', color: '#94a3b8', fontSize: 8.5 }}>{ii + 1}</td>
+                  <tr key={`item-${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc', color: '#000' }}>
+                    <td style={{ padding: '5px 8px', fontSize: 8.5 }}>{ii + 1}</td>
                     <td style={{ padding: '5px 8px', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>Description...</span>}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.unit}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', fontSize: 9 }}>{item.qty}</td>
