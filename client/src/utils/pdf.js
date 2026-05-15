@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const BRAND = { primary: [14, 165, 233], dark: [3, 105, 161], secondary: [120, 53, 15], text: [15, 23, 42] };
+const BRAND = { primary: [14, 165, 233], dark: [3, 105, 161], secondary: [120, 53, 15], text: [0, 0, 0] };
 
 const fmtCurrency = (v, currency = 'FCFA') => `${Number(v || 0).toLocaleString('fr-FR')} ${currency}`;
 const fmtDate = (d, lang) => d ? new Date(d).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US') : '—';

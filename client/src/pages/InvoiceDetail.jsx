@@ -27,7 +27,10 @@ export default function InvoiceDetail() {
     load();
   };
 
-  const handleWhatsApp = () => openWhatsApp(invoice.number, lang);
+  const handleWhatsApp = () => {
+    exportInvoicePDF(invoice, lang);
+    openWhatsApp(invoice.number, lang);
+  };
   const handlePDF = () => exportInvoicePDF(invoice, lang);
 
   if (loading) return <div className="loader"><div className="loader-dot"/><div className="loader-dot"/><div className="loader-dot"/></div>;
