@@ -4,7 +4,7 @@ import { useLang } from '../context/LangContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate, statusColors } from '../utils/helpers';
 import toast from 'react-hot-toast';
-import { Plus, Search, Eye, Trash2, FileText } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, FileText, Edit } from 'lucide-react';
 
 const STATUSES = ['draft','sent','viewed','paid','overdue','canceled'];
 
@@ -92,6 +92,7 @@ export default function Invoices() {
                     <td>
                       <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
                         <button className="btn-icon" title={t.common.view} onClick={() => navigate(`/invoices/${inv.id}`)}><Eye size={14}/></button>
+                        <button className="btn-icon" title={t.common.edit} onClick={() => navigate(`/invoices/${inv.id}/edit`)}><Edit size={14}/></button>
                         <button className="btn-icon" title={t.common.delete} onClick={e => handleDelete(inv.id, e)} style={{ color: 'var(--danger)' }}><Trash2 size={14}/></button>
                       </div>
                     </td>

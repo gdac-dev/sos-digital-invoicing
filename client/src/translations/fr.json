@@ -44,7 +44,7 @@
   "quote": {
     "title": "Devis", "new": "Nouveau devis", "number": "Numéro",
     "validity": "Validité", "convertToInvoice": "Convertir en facture",
-    "converted": "Converti en facture"
+    "converted": "Converti en facture", "edit": "Modifier le devis", "view": "Voir le devis"
   },
   "client": {
     "title": "Clients", "new": "Nouveau client", "name": "Nom complet",
@@ -75,6 +75,7 @@
     "title": "Paramètres", "users": "Utilisateurs", "newUser": "Nouvel utilisateur",
     "name": "Nom", "email": "Email", "role": "Rôle", "password": "Mot de passe",
     "canView": "Peut voir les données", "active": "Actif",
+    "deleteUser": "Supprimer l'utilisateur (Admin uniquement)",
     "roles": { "admin": "Administrateur", "sales": "Commercial", "accounting": "Comptabilité" }
   },
   "common": {

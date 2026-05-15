@@ -44,7 +44,7 @@
   "quote": {
     "title": "Quotes", "new": "New Quote", "number": "Number",
     "validity": "Validity", "convertToInvoice": "Convert to Invoice",
-    "converted": "Converted to Invoice"
+    "converted": "Converted to Invoice", "edit": "Edit Quote", "view": "View Quote"
   },
   "client": {
     "title": "Clients", "new": "New Client", "name": "Full Name",
@@ -75,6 +75,7 @@
     "title": "Settings", "users": "Users", "newUser": "New User",
     "name": "Name", "email": "Email", "role": "Role", "password": "Password",
     "canView": "Can view data", "active": "Active",
+    "deleteUser": "Delete user (Admin only)",
     "roles": { "admin": "Administrator", "sales": "Sales", "accounting": "Accounting" }
   },
   "common": {

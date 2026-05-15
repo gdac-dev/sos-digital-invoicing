@@ -3,7 +3,7 @@ import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
-import { Plus, Edit, Trash2, Shield, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, Users, AlertTriangle } from 'lucide-react';
 
 const ROLES = ['admin', 'sales', 'accounting'];
 
@@ -49,6 +49,15 @@ export default function Settings() {
     await api.patch(`/users/${u.id}`, { isActive: !u.isActive });
     toast.success(lang === 'fr' ? 'Statut mis à jour' : 'Status updated');
     load();
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (!confirm(lang === 'fr' ? `Supprimer définitivement l'utilisateur "${u.name}" ?` : `Permanently delete user "${u.name}"?`)) return;
+    try {
+      await api.delete(`/users/${u.id}`);
+      toast.success(lang === 'fr' ? 'Utilisateur supprimé' : 'User deleted');
+      load();
+    } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
 
   const roleColors = { admin: '#ef4444', sales: '#0ea5e9', accounting: '#8b5cf6' };
@@ -121,7 +130,12 @@ export default function Settings() {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn-icon" onClick={() => openEdit(u)}><Edit size={13} /></button>
+                      <button className="btn-icon" title={t.common.edit} onClick={() => openEdit(u)}><Edit size={13} /></button>
+                      {me?.role === 'admin' && u.id !== me?.id && (
+                        <button className="btn-icon" title={lang === 'fr' ? 'Supprimer (Admin)' : 'Delete (Admin)'} onClick={() => handleDeleteUser(u)} style={{ color: 'var(--danger)' }}>
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -37,6 +37,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="invoices/new" element={<InvoiceEditor />} />
+          <Route path="invoices/:id/edit" element={<InvoiceEditor />} />
           <Route path="invoices/:id" element={<InvoiceDetail />} />
           <Route path="quotes" element={<Quotes />} />
           <Route path="clients" element={<CRM />} />
