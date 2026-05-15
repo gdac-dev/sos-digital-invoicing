@@ -147,86 +147,156 @@ function classicPDF(inv, lang, qrDataUrl, colors) {
 
 function modernPDF(inv, lang, qrDataUrl, colors) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const w = 210, margin = 16;
+  const w = 210, h = 297, margin = 16;
   const labels = lang === 'fr'
-    ? { invoice: 'FACTURE', desc: 'Prestation', qty: 'Qté', price: 'Prix', total: 'Total', grandTotal: 'TOTAL TTC', due: 'Échéance', subtotal: 'Sous-total', tax: 'TVA' }
-    : { invoice: 'INVOICE', desc: 'Service', qty: 'Qty', price: 'Price', total: 'Total', grandTotal: 'GRAND TOTAL', due: 'Due Date', subtotal: 'Subtotal', tax: 'VAT' };
+    ? { invoice: 'FACTURE', billedTo: 'FACTURÉ À', payment: 'Paiement', currency: 'Devise', date: 'Date', due: 'Échéance', num: 'N°', desc: 'DESCRIPTION', unit: 'UNITÉ', qty: 'QTÉ', price: 'P.U.', total: 'TOTAL', subtotal: 'Total HT', tax: 'TVA', discount: 'Remise', grandTotal: 'TOTAL TTC', notes: 'Notes', footer: 'Merci de votre Confiance', sigClient: 'Signature client', sigCompany: 'Pour SOS DIGITAL' }
+    : { invoice: 'INVOICE', billedTo: 'BILLED TO', payment: 'Payment', currency: 'Currency', date: 'Date', due: 'Due Date', num: 'N°', desc: 'DESCRIPTION', unit: 'UNIT', qty: 'QTY', price: 'PRICE', total: 'TOTAL', subtotal: 'Subtotal', tax: 'VAT', discount: 'Discount', grandTotal: 'GRAND TOTAL', notes: 'Notes', footer: 'Thank you for your business', sigClient: 'Client Signature', sigCompany: 'For SOS DIGITAL' };
 
-  // Colored left stripe
+  // 1. TOP HEADER BANNER (Solid color)
   doc.setFillColor(...colors.primary);
-  doc.rect(0, 0, 8, 297, 'F');
+  doc.rect(0, 0, w, 45, 'F');
 
-  // Header
-  doc.setFillColor(15, 23, 42);
-  doc.rect(8, 0, w - 8, 50, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(255, 255, 255);
+  doc.text('SOS DIGITAL', margin, 20);
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 255, 255);
+  doc.text(lang === 'fr' ? 'Facturation & Services Numériques' : 'Invoicing & Digital Services', margin, 26);
+
   doc.setFont('helvetica', 'bold'); doc.setFontSize(24); doc.setTextColor(255, 255, 255);
-  doc.text('SOS DIGITAL', 20, 20);
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(148, 163, 184);
-  doc.text(lang === 'fr' ? 'Facturation & Gestion Commerciale' : 'Invoicing & Business Management', 20, 28);
+  doc.text(labels.invoice, w - margin, 20, { align: 'right' });
+  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+  doc.text(`N° ${inv.number}`, w - margin, 27, { align: 'right' });
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...colors.primary);
-  doc.text(labels.invoice, w - margin, 18, { align: 'right' });
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(148, 163, 184);
-  doc.text(`#${inv.number}`, w - margin, 26, { align: 'right' });
-  doc.text(fmtDate(inv.issueDate, lang), w - margin, 32, { align: 'right' });
-  if (inv.dueDate) doc.text(`${labels.due}: ${fmtDate(inv.dueDate, lang)}`, w - margin, 38, { align: 'right' });
+  // 2. CLIENT & INVOICE DETAILS
+  // Client box (Light background with colored left border)
+  doc.setFillColor(248, 250, 252); // Very light gray
+  doc.roundedRect(margin, 55, 100, 35, 3, 3, 'F');
+  doc.setFillColor(...colors.primary);
+  doc.rect(margin, 55, 3, 35, 'F'); // Left border
 
-  // Two columns below header
-  doc.setTextColor(...colors.text);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...colors.primary);
-  doc.text('DE:', 20, 62);
-  doc.setFontSize(10); doc.setTextColor(...colors.text); doc.setFont('helvetica', 'bold');
-  doc.text('SOS DIGITAL', 20, 69);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
-  doc.text('+237 653 522 435', 20, 75);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...colors.primary);
+  doc.text(labels.billedTo, margin + 8, 63);
+  doc.setFontSize(11); doc.setTextColor(30, 41, 59); // Dark slate
+  doc.text(inv.client?.name || '', margin + 8, 70);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(71, 85, 105);
+  if (inv.client?.company) doc.text(inv.client.company, margin + 8, 75);
+  if (inv.client?.email) doc.text(inv.client.email, margin + 8, inv.client?.company ? 80 : 75);
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...colors.primary);
-  doc.text(lang === 'fr' ? 'POUR:' : 'TO:', 115, 62);
-  doc.setFontSize(10); doc.setTextColor(...colors.text); doc.setFont('helvetica', 'bold');
-  doc.text(inv.client?.name || '', 115, 69);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
-  if (inv.client?.company) doc.text(inv.client.company, 115, 75);
-  if (inv.client?.email) doc.text(inv.client.email, 115, inv.client?.company ? 81 : 75);
+  // Invoice details (Right side)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(30, 41, 59);
+  doc.text(`${labels.payment}:`, 125, 63);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(71, 85, 105); doc.text('Virement', 145, 63); // Or dynamically from somewhere if available
 
-  // Table
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+  doc.text(`${labels.currency}:`, 125, 70);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(71, 85, 105); doc.text(inv.currency || 'FCFA', 145, 70);
+
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+  doc.text(`${labels.date}:`, 125, 77);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(71, 85, 105); doc.text(fmtDate(inv.issueDate, lang), 145, 77);
+  
+  if (inv.dueDate) {
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59);
+    doc.text(`${labels.due}:`, 125, 84);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(71, 85, 105); doc.text(fmtDate(inv.dueDate, lang), 145, 84);
+  }
+
+  // 3. TABLE
   autoTable(doc, {
-    startY: 92,
-    margin: { left: 20, right: margin },
-    head: [[labels.desc, labels.qty, labels.price, labels.total]],
-    body: inv.items?.map(i => [i.description, i.quantity, fmtCurrency(i.unitPrice, inv.currency), fmtCurrency(i.total, inv.currency)]) || [],
-    headStyles: { fillColor: colors.dark, textColor: 255, fontStyle: 'bold', fontSize: 8 },
-    bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: { 0: { cellWidth: 85 }, 1: { halign: 'center', cellWidth: 18 }, 2: { halign: 'right', cellWidth: 38 }, 3: { halign: 'right', cellWidth: 38, fontStyle: 'bold', textColor: colors.primary } },
+    startY: 100,
+    margin: { left: margin, right: margin },
+    head: [[labels.num, labels.desc, labels.unit, labels.qty, labels.price, labels.total]],
+    body: inv.items?.map((i, idx) => [
+      String(idx + 1),
+      i.description,
+      'Unité', // We'll hardcode unit since it's not in the DB, or just 'Unité'
+      i.quantity,
+      fmtCurrency(i.unitPrice, ''),
+      { content: fmtCurrency(i.total, inv.currency), styles: { fontStyle: 'bold' } }
+    ]) || [],
+    headStyles: { fillColor: colors.primary, textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'left' },
+    bodyStyles: { fontSize: 9, textColor: 30, 41, 59 },
+    alternateRowStyles: { fillColor: [255, 255, 255] },
+    columnStyles: {
+      0: { cellWidth: 10 },
+      1: { cellWidth: 75 },
+      2: { cellWidth: 20 },
+      3: { halign: 'center', cellWidth: 15 },
+      4: { halign: 'right', cellWidth: 25 },
+      5: { halign: 'right', cellWidth: 33 }
+    },
+    didDrawPage: function (data) {
+      // Optional: Add a subtle line below the table if needed
+    }
   });
 
-  // Total box
-  const endY = doc.lastAutoTable.finalY + 6;
-  doc.setFillColor(240, 249, 255);
-  doc.roundedRect(w - margin - 70, endY, 70 + margin - 16, 30, 3, 3, 'F');
-  doc.setFontSize(8); doc.setTextColor(100, 116, 139);
-  doc.text(labels.subtotal, w - margin - 68, endY + 7);
-  doc.text(fmtCurrency(inv.subtotal, inv.currency), w - margin - 2, endY + 7, { align: 'right' });
-  if (inv.taxRate > 0) {
-    doc.text(`${labels.tax} ${inv.taxRate}%`, w - margin - 68, endY + 14);
-    doc.text(fmtCurrency(inv.taxAmount, inv.currency), w - margin - 2, endY + 14, { align: 'right' });
-  }
-  doc.setFillColor(...colors.primary);
-  doc.roundedRect(w - margin - 70, endY + 20, 70 + margin - 16, 10, 2, 2, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
-  doc.text(labels.grandTotal, w - margin - 68, endY + 27);
-  doc.text(fmtCurrency(inv.total, inv.currency), w - margin - 2, endY + 27, { align: 'right' });
+  // 4. TOTALS BOX
+  const endY = doc.lastAutoTable.finalY + 10;
+  
+  // Outer gray box
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(w - margin - 85, endY, 85, 38, 4, 4, 'F');
 
-  // Footer stripe
+  // Subtotals inside gray box
+  doc.setFontSize(9); doc.setTextColor(71, 85, 105);
+  doc.text(labels.subtotal, w - margin - 80, endY + 8);
+  doc.text(fmtCurrency(inv.subtotal, inv.currency), w - margin - 5, endY + 8, { align: 'right' });
+  
+  let currentY = endY + 15;
+  if (inv.discount > 0) {
+    doc.text(labels.discount, w - margin - 80, currentY);
+    doc.text(`- ${fmtCurrency(inv.discount, inv.currency)}`, w - margin - 5, currentY, { align: 'right' });
+    currentY += 7;
+  }
+  if (inv.taxRate > 0) {
+    doc.text(`${labels.tax} (${inv.taxRate}%)`, w - margin - 80, currentY);
+    doc.text(fmtCurrency(inv.taxAmount, inv.currency), w - margin - 5, currentY, { align: 'right' });
+    currentY += 7;
+  }
+
+  // Inner purple TTC box
   doc.setFillColor(...colors.primary);
-  doc.rect(0, 285, w, 12, 'F');
-  doc.setFontSize(7); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal');
-  doc.text('SOS DIGITAL  ·  +237 653 522 435  ·  contact@sosdigital.cm', w / 2, 292, { align: 'center' });
+  doc.roundedRect(w - margin - 80, currentY - 3, 75, 12, 3, 3, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+  doc.text(labels.grandTotal, w - margin - 75, currentY + 4.5);
+  doc.text(fmtCurrency(inv.total, inv.currency), w - margin - 10, currentY + 4.5, { align: 'right' });
+
+  // 5. NOTES & FOOTER
+  const noteY = Math.max(endY + 45, doc.lastAutoTable.finalY + 15);
+  
+  if (inv.notes) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...colors.primary);
+    doc.text(labels.notes + ':', margin, noteY);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(71, 85, 105);
+    doc.text(inv.notes, margin, noteY + 6, { maxWidth: 80 });
+  }
+
+  // Separator line
+  const footerStartY = 245;
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.line(margin, footerStartY, w - margin, footerStartY);
+
+  // Signatures
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(148, 163, 184);
+  doc.text(labels.footer, margin, footerStartY + 10);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.line(margin, footerStartY + 30, margin + 40, footerStartY + 30);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text(labels.sigClient, margin + 20, footerStartY + 35, { align: 'center' });
+
+  doc.line(w - margin - 40, footerStartY + 30, w - margin, footerStartY + 30);
+  doc.text(labels.sigCompany, w - margin - 20, footerStartY + 35, { align: 'center' });
+
+  // Bottom text & QR
+  doc.line(margin, 270, w - margin, 270);
+  doc.setFontSize(7); doc.setTextColor(148, 163, 184);
+  doc.text(`SOS DIGITAL · +237 653 522 435 · contact@sosdigital.cm`, margin, 278);
 
   if (qrDataUrl) {
-    doc.addImage(qrDataUrl, 'PNG', w - margin - 16, 266, 16, 16);
-    doc.setFontSize(6); doc.setTextColor(100, 116, 139);
-    doc.text('Contact', w - margin - 8, 284, { align: 'center' });
+    doc.addImage(qrDataUrl, 'PNG', w - margin - 16, 272, 16, 16);
+    doc.setFontSize(6); doc.setTextColor(148, 163, 184);
+    doc.text('Contact', w - margin - 8, 291, { align: 'center' });
   }
 
   doc.save(`${inv.number}.pdf`);

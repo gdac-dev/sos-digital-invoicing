@@ -120,10 +120,31 @@ router.post('/:id/convert', async (req, res) => {
 // PATCH /api/quotes/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, palette, notes, validUntil } = req.body;
+    const { status, templateType, palette, notes, validUntil, items, discount, taxRate, currency } = req.body;
     const updateData = { status, notes, validUntil: validUntil ? new Date(validUntil) : undefined };
     if (templateType) updateData.templateType = templateType;
     if (palette) updateData.palette = palette;
+    if (currency) updateData.currency = currency;
+    
+    if (items) {
+      const subtotal = items.reduce((s, i) => s + Number(i.quantity) * Number(i.unitPrice), 0);
+      const taxAmt = (subtotal - (discount || 0)) * ((taxRate || 0) / 100);
+      updateData.subtotal = subtotal;
+      updateData.taxRate = taxRate || 0;
+      updateData.taxAmount = taxAmt;
+      updateData.discount = discount || 0;
+      updateData.total = subtotal - (discount || 0) + taxAmt;
+      await prisma.quoteItem.deleteMany({ where: { quoteId: req.params.id } });
+      updateData.items = {
+        create: items.map(i => ({
+          description: i.description,
+          quantity: Number(i.quantity),
+          unitPrice: Number(i.unitPrice),
+          total: Number(i.quantity) * Number(i.unitPrice),
+        })),
+      };
+    }
+
     const quote = await prisma.quote.update({
       where: { id: req.params.id },
       data: updateData,
