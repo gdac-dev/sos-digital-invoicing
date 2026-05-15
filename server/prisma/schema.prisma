@@ -89,6 +89,7 @@ model InvoiceItem {
   id            String       @id @default(uuid())
   invoiceId     String
   catalogItemId String?
+  sectionTitle  String?
   description   String
   quantity      Float        @default(1)
   unitPrice     Float
@@ -127,10 +128,11 @@ model Quote {
 }
 
 model QuoteItem {
-  id          String  @id @default(uuid())
-  quoteId     String
-  description String
-  quantity    Float   @default(1)
+  id           String  @id @default(uuid())
+  quoteId      String
+  sectionTitle String?
+  description  String
+  quantity     Float   @default(1)
   unitPrice   Float
   total       Float
 

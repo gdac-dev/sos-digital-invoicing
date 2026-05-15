@@ -85,14 +85,24 @@ export default function InvoiceEditor() {
         }));
         setNotes({ conditions: inv.notes || '', footer: inv.footer || '' });
         setDesign(d => ({ ...d, template: inv.templateType || 'elegant', palette: inv.palette || 'skyblue' }));
-        // Map flat items to a single section
-        const items = (inv.items || []).map(i => ({
-          description: i.description || '',
-          unit: i.unit || 'Unité',
-          qty: i.quantity ?? 1,
-          unitPrice: i.unitPrice ?? 0,
-        }));
-        setSections([{ title: '', items: items.length ? items : [{ ...EMPTY_ITEM }] }]);
+        // Group flat items back into sections based on sectionTitle
+        const loadedSections = [];
+        let currentSection = null;
+        for (const i of (inv.items || [])) {
+          const st = i.sectionTitle || '';
+          if (!currentSection || currentSection.title !== st) {
+            currentSection = { title: st, items: [] };
+            loadedSections.push(currentSection);
+          }
+          currentSection.items.push({
+            description: i.description || '',
+            unit: i.unit || 'Unité',
+            qty: i.quantity ?? 1,
+            unitPrice: i.unitPrice ?? 0,
+          });
+        }
+        if (!loadedSections.length) loadedSections.push({ title: '', items: [{ ...EMPTY_ITEM }] });
+        setSections(loadedSections);
       })
       .catch(() => toast.error(lang === 'fr' ? 'Facture introuvable' : 'Invoice not found'))
       .finally(() => setLoadingInvoice(false));
@@ -115,11 +125,16 @@ export default function InvoiceEditor() {
         taxRate: Number(extras.taxRate), discount: Number(extras.discount),
         currency: details.currency, dueDate: details.dueDate || null,
         notes: notes.conditions, footer: notes.footer,
-        items: allItems.map(i => ({
-          description: i.description,
-          quantity: Number(parseFloat(i.qty) || 1),
-          unitPrice: Number(parseFloat(i.unitPrice) || 0),
-        })),
+        items: sections.flatMap(s => 
+          s.items
+            .filter(i => i.description?.trim())
+            .map(i => ({
+              sectionTitle: s.title || '',
+              description: i.description,
+              quantity: Number(parseFloat(i.qty) || 1),
+              unitPrice: Number(parseFloat(i.unitPrice) || 0),
+            }))
+        ),
       };
       if (isEditing) {
         await api.patch(`/invoices/${id}`, payload);
@@ -134,22 +149,30 @@ export default function InvoiceEditor() {
   };
 
   const handleExportPDF = () => {
-    const allItems = sections.flatMap(s => s.items.map(i => ({
-      description: i.description || '—', quantity: parseFloat(i.qty) || 1,
-      unitPrice: parseFloat(i.unitPrice) || 0,
-      total: (parseFloat(i.qty) || 1) * (parseFloat(i.unitPrice) || 0),
-    })));
-    const sub = allItems.reduce((s, i) => s + i.total, 0);
+    const exportedItems = sections.flatMap(s => 
+      s.items
+        .filter(i => i.description?.trim() || parseFloat(i.unitPrice) > 0)
+        .map(i => ({
+          sectionTitle: s.title || '',
+          description: i.description || '—', 
+          quantity: parseFloat(i.qty) || 1,
+          unitPrice: parseFloat(i.unitPrice) || 0,
+          total: (parseFloat(i.qty) || 1) * (parseFloat(i.unitPrice) || 0),
+        }))
+    );
+    const sub = exportedItems.reduce((s, i) => s + i.total, 0);
     const disc = parseFloat(extras.discount) || 0, tax = parseFloat(extras.taxRate) || 0;
     const taxAmt = (sub - disc) * tax / 100;
+    
     exportInvoicePDF({
-      number: details.number || `${new Date().getFullYear()}-APERÇU`,
-      templateType: design.template, palette: design.palette, language: details.language, currency: details.currency,
-      issueDate: new Date(), dueDate: details.dueDate ? new Date(details.dueDate) : null,
+      templateType: design.template, palette: design.palette,
+      number: details.number || `${new Date().getFullYear()}-XXXX`,
+      currency: details.currency || 'FCFA',
+      issueDate: details.date || new Date(), dueDate: details.dueDate,
       subtotal: sub, taxRate: tax, taxAmount: taxAmt, discount: disc, total: sub - disc + taxAmt,
       notes: notes.conditions,
       client: { name: client.name || 'Client', email: client.email, phone: client.phone },
-      items: allItems,
+      items: exportedItems,
     }, details.language);
   };
 

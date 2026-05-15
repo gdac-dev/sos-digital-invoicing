@@ -65,6 +65,7 @@ router.post('/', async (req, res) => {
         notes,
         items: {
           create: items.map(i => ({
+            sectionTitle: i.sectionTitle || null,
             description: i.description,
             quantity: Number(i.quantity),
             unitPrice: Number(i.unitPrice),
@@ -101,7 +102,7 @@ router.post('/:id/convert', async (req, res) => {
         notes: quote.notes,
         items: {
           create: quote.items.map(i => ({
-            description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, total: i.total,
+            sectionTitle: i.sectionTitle, description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, total: i.total,
           })),
         },
       },
@@ -137,6 +138,7 @@ router.patch('/:id', async (req, res) => {
       await prisma.quoteItem.deleteMany({ where: { quoteId: req.params.id } });
       updateData.items = {
         create: items.map(i => ({
+          sectionTitle: i.sectionTitle || null,
           description: i.description,
           quantity: Number(i.quantity),
           unitPrice: Number(i.unitPrice),

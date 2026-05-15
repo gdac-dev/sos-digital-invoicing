@@ -126,19 +126,39 @@ function generateUnifiedPDF(inv, lang, qrDataUrl, colors, templateType) {
     doc.setFont('helvetica', 'normal'); doc.setTextColor(71, 85, 105); doc.text(fmtDate(inv.issueDate, lang), 150, contentStartY + 22);
   }
 
+  const tableBody = [];
+  let currentSection = null;
+  let currentItemIndex = 1;
+
+  for (const i of (inv.items || [])) {
+    const st = i.sectionTitle || '';
+    if (currentSection !== st) {
+      if (st) {
+        tableBody.push([{
+          content: st,
+          colSpan: 6,
+          styles: { fillColor: [238, 242, 246], textColor: colors.dark, fontStyle: 'bold', fontSize: 9.5 }
+        }]);
+      }
+      currentSection = st;
+      currentItemIndex = 1; 
+    }
+    tableBody.push([
+      String(currentItemIndex++),
+      i.description || '',
+      'Unité', 
+      i.quantity,
+      fmtCurrency(i.unitPrice, ''),
+      { content: fmtCurrency(i.total, inv.currency), styles: { fontStyle: 'bold' } }
+    ]);
+  }
+
   // TABLE
   autoTable(doc, {
     startY: contentStartY + 45,
     margin: { left: margin, right: margin },
     head: [[labels.num, labels.desc, labels.unit, labels.qty, labels.price, labels.total]],
-    body: inv.items?.map((i, idx) => [
-      String(idx + 1),
-      i.description,
-      'Unité', 
-      i.quantity,
-      fmtCurrency(i.unitPrice, ''),
-      { content: fmtCurrency(i.total, inv.currency), styles: { fontStyle: 'bold' } }
-    ]) || [],
+    body: tableBody,
     headStyles: { fillColor: colors.dark, textColor: 255, fontStyle: 'bold', fontSize: 8.5, halign: 'left' },
     bodyStyles: { fontSize: 9.5, textColor: [0, 0, 0] },
     alternateRowStyles: { fillColor: [248, 250, 252] },

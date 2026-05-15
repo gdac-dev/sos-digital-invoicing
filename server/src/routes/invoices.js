@@ -74,6 +74,7 @@ router.post('/', async (req, res) => {
     if (!resolvedClientId) return res.status(400).json({ error: 'Client requis' });
 
     const parsedItems = items.map(i => ({
+      sectionTitle: i.sectionTitle || null,
       description: String(i.description || ''),
       quantity: parseFloat(i.quantity) || 1,
       unitPrice: parseFloat(i.unitPrice) || 0,
@@ -100,6 +101,7 @@ router.post('/', async (req, res) => {
         items: {
           create: parsedItems.map(i => ({
             catalogItemId: i.catalogItemId,
+            sectionTitle: i.sectionTitle,
             description: i.description,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
@@ -141,6 +143,7 @@ router.patch('/:id', async (req, res) => {
       updateData.items = {
         create: items.map(i => ({
           catalogItemId: i.catalogItemId || null,
+          sectionTitle: i.sectionTitle || null,
           description: i.description,
           quantity: Number(i.quantity),
           unitPrice: Number(i.unitPrice),
