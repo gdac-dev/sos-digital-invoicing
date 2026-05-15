@@ -141,7 +141,7 @@ export default function InvoiceEditor() {
           <Save size={13} />{saving ? '...' : (lang === 'fr' ? 'Créer' : 'Save')}
         </button>
         {isMobile && (
-          <button className="btn btn-ghost btn-sm" style={{ padding: '5px 8px' }} onClick={() => setMobilePanel(p => p === 'form' ? 'preview' : 'form')}>
+          <button className="btn btn-ghost btn-sm" style={{ padding: '5px 8px' }} onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
             <Eye size={13} />
           </button>
         )}
@@ -177,12 +177,9 @@ export default function InvoiceEditor() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: 'calc(100vh - 64px)', overflow: 'hidden', margin: '-28px', background: 'var(--bg)' }}>
-      {isMobile ? (
-        mobilePanel === 'form' ? formNode : previewNode
-      ) : (
-        <>{formNode}{previewNode}</>
-      )}
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 64px)', minHeight: 'calc(100vh - 64px)', overflow: isMobile ? 'visible' : 'hidden', margin: '-28px', background: 'var(--bg)' }}>
+      {formNode}
+      {previewNode}
     </div>
   );
 }

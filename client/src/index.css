@@ -313,6 +313,15 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239,68,68,0); }
 }
 
+/* Floating animation for chatbot button */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
 /* Responsive — Mobile */
 @media (max-width: 900px) {
   /* Sidebar */

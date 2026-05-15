@@ -76,6 +76,7 @@ export default function ChatbotWidget() {
     <>
       {/* Floating button */}
       <button
+        className="float-anim"
         onClick={() => { setOpen(o => !o); }}
         style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 1000,

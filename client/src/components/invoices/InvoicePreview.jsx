@@ -1,4 +1,5 @@
 import { PALETTES } from './editorConstants';
+import { QRCodeSVG } from 'qrcode.react';
 
 // Format number with locale
 const fmt = (n, currency = 'FCFA') => `${Number(n || 0).toLocaleString('fr-FR')} ${currency}`;
@@ -234,10 +235,14 @@ export default function InvoicePreview({ company, client, details, sections, ext
           ))}
         </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 14, paddingTop: 8, borderTop: `2px solid ${palette.primary}` }}>
-          <div style={{ fontSize: 7.5, color: '#94a3b8' }}>
+        {/* Footer with QR Code */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 8, borderTop: `2px solid ${palette.primary}` }}>
+          <div style={{ fontSize: 7.5, color: '#94a3b8', flex: 1, paddingRight: 10 }}>
             {company.name} · {company.phone} · {company.email}{company.taxId ? ` · N° fiscal: ${company.taxId}` : ''}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <QRCodeSVG value="https://wa.me/237653522435" size={40} level="M" />
+            <span style={{ fontSize: 6, color: '#94a3b8' }}>{details.language === 'en' ? 'Contact us' : 'Contactez-nous'}</span>
           </div>
         </div>
       </div>
