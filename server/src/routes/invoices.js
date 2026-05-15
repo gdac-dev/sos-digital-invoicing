@@ -66,7 +66,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/invoices
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'Articles requis' });
     
     // Resolve or create client
@@ -91,6 +91,7 @@ router.post('/', async (req, res) => {
       data: {
         number, clientId: resolvedClientId, userId: req.user.id,
         templateType: templateType || 'classic',
+        palette: palette || 'skyblue',
         language: language || 'fr',
         subtotal: Number(subtotal), taxRate: Number(tax), taxAmount: Number(taxAmount), discount: Number(disc), total: Number(total),
         currency: currency || 'FCFA',
@@ -118,10 +119,11 @@ router.post('/', async (req, res) => {
 // PATCH /api/invoices/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
+    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
     const updateData = {};
     if (status) updateData.status = status;
     if (templateType) updateData.templateType = templateType;
+    if (palette) updateData.palette = palette;
     if (language) updateData.language = language;
     if (currency) updateData.currency = currency;
     if (notes !== undefined) updateData.notes = notes;

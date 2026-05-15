@@ -84,7 +84,7 @@ export default function InvoiceEditor() {
           discount: inv.discount ?? 0,
         }));
         setNotes({ conditions: inv.notes || '', footer: inv.footer || '' });
-        setDesign(d => ({ ...d, template: inv.templateType || 'elegant' }));
+        setDesign(d => ({ ...d, template: inv.templateType || 'elegant', palette: inv.palette || 'skyblue' }));
         // Map flat items to a single section
         const items = (inv.items || []).map(i => ({
           description: i.description || '',
@@ -111,7 +111,7 @@ export default function InvoiceEditor() {
     try {
       const payload = {
         clientId: client.id,
-        templateType: design.template, language: details.language,
+        templateType: design.template, palette: design.palette, language: details.language,
         taxRate: Number(extras.taxRate), discount: Number(extras.discount),
         currency: details.currency, dueDate: details.dueDate || null,
         notes: notes.conditions, footer: notes.footer,

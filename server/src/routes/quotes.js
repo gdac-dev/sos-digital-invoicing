@@ -47,7 +47,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/quotes
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, language, taxRate, discount, currency, validUntil, notes, items } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, validUntil, notes, items } = req.body;
     if (!clientId || !items?.length) return res.status(400).json({ error: 'Client et articles requis' });
     const number = await generateQuoteNumber();
     const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
@@ -57,6 +57,7 @@ router.post('/', async (req, res) => {
       data: {
         number, clientId, userId: req.user.id,
         templateType: templateType || 'classic',
+        palette: palette || 'skyblue',
         language: language || 'fr',
         subtotal, taxRate: taxRate || 0, taxAmount, discount: discount || 0, total,
         currency: currency || 'FCFA',
@@ -94,7 +95,7 @@ router.post('/:id/convert', async (req, res) => {
     const invoice = await prisma.invoice.create({
       data: {
         number, clientId: quote.clientId, userId: req.user.id,
-        templateType: quote.templateType, language: quote.language,
+        templateType: quote.templateType, palette: quote.palette, language: quote.language,
         subtotal: quote.subtotal, taxRate: quote.taxRate, taxAmount: quote.taxAmount,
         discount: quote.discount, total: quote.total, currency: quote.currency,
         notes: quote.notes,
@@ -119,10 +120,13 @@ router.post('/:id/convert', async (req, res) => {
 // PATCH /api/quotes/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, notes, validUntil } = req.body;
+    const { status, templateType, palette, notes, validUntil } = req.body;
+    const updateData = { status, notes, validUntil: validUntil ? new Date(validUntil) : undefined };
+    if (templateType) updateData.templateType = templateType;
+    if (palette) updateData.palette = palette;
     const quote = await prisma.quote.update({
       where: { id: req.params.id },
-      data: { status, notes, validUntil: validUntil ? new Date(validUntil) : undefined },
+      data: updateData,
     });
     res.json(quote);
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
