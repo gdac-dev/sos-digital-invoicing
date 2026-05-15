@@ -144,7 +144,7 @@ export default function InvoiceEditor() {
     const taxAmt = (sub - disc) * tax / 100;
     exportInvoicePDF({
       number: details.number || `${new Date().getFullYear()}-APERÇU`,
-      templateType: design.template, language: details.language, currency: details.currency,
+      templateType: design.template, palette: design.palette, language: details.language, currency: details.currency,
       issueDate: new Date(), dueDate: details.dueDate ? new Date(details.dueDate) : null,
       subtotal: sub, taxRate: tax, taxAmount: taxAmt, discount: disc, total: sub - disc + taxAmt,
       notes: notes.conditions,
@@ -188,11 +188,6 @@ export default function InvoiceEditor() {
         <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving} style={{ padding: '5px 10px' }}>
           <Save size={13} />{saving ? '...' : (isEditing ? (lang === 'fr' ? 'Mettre à jour' : 'Update') : (lang === 'fr' ? 'Créer' : 'Save'))}
         </button>
-        {isMobile && (
-          <button className="btn btn-ghost btn-sm" style={{ padding: '5px 8px' }} onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
-            <Eye size={13} />
-          </button>
-        )}
       </div>
 
       {/* Tabs */}
@@ -225,7 +220,7 @@ export default function InvoiceEditor() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 64px)', minHeight: 'calc(100vh - 64px)', overflow: isMobile ? 'visible' : 'hidden', margin: '-28px', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : 'calc(100vh - 64px)', minHeight: 'calc(100vh - 64px)', overflow: isMobile ? 'visible' : 'hidden', margin: isMobile ? '-16px' : '-28px', background: 'var(--bg)' }}>
       {formNode}
       {previewNode}
     </div>

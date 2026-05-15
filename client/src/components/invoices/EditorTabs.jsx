@@ -131,26 +131,49 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
             <button className="btn-icon" onClick={() => setCollapsed(c => ({ ...c, [si]: !c[si] }))}>
               {collapsed[si] ? <ChevronRight size={14}/> : <ChevronDown size={14}/>}
             </button>
-            <input className="form-control" style={{ flex: 1, padding: '4px 8px', fontSize: 13, fontWeight: 600 }} placeholder="Titre de section (optionnel)" value={sec.title} onChange={e => setSectionTitle(si, e.target.value)} />
+            <input className="form-control" style={{ flex: 1, padding: '4px 8px', fontSize: 13, fontWeight: 600 }} placeholder={lang === 'fr' ? 'Titre de section (optionnel)' : 'Section title (optional)'} value={sec.title} onChange={e => setSectionTitle(si, e.target.value)} />
             <button className="btn-icon" onClick={() => removeSection(si)} style={{ color: 'var(--danger)' }}><Trash2 size={13}/></button>
           </div>
           {!collapsed[si] && (
             <div style={{ padding: '10px 12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 80px 90px 28px', gap: 4, marginBottom: 4 }}>
-                {(lang === 'fr' ? ['Description','Unité','Qté','Prix unit.',''] : ['Description','Unit','Qty','Unit price','']).map(h => <div key={h} style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</div>)}
-              </div>
               {sec.items.map((item, ii) => (
-                <div key={ii} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 80px 90px 28px', gap: 4, marginBottom: 4, alignItems: 'center' }}>
-                  <input className="form-control" style={{ padding: '5px 8px', fontSize: 12 }} value={item.description} onChange={e => setItemField(si, ii, 'description', e.target.value)} placeholder={lang === 'fr' ? 'Prestation...' : 'Service...'} />
-                  <select className="form-control" style={{ padding: '5px 4px', fontSize: 11 }} value={item.unit} onChange={e => setItemField(si, ii, 'unit', e.target.value)}>
-                    {UNITS.map(u => <option key={u}>{u}</option>)}
-                  </select>
-                  <input type="number" className="form-control" style={{ padding: '5px 6px', fontSize: 12 }} min="0" value={item.qty} onChange={e => setItemField(si, ii, 'qty', e.target.value)} />
-                  <input type="number" className="form-control" style={{ padding: '5px 6px', fontSize: 12 }} min="0" value={item.unitPrice} onChange={e => setItemField(si, ii, 'unitPrice', e.target.value)} />
-                  <button className="btn-icon" onClick={() => removeItem(si, ii)}><Trash2 size={12} style={{ color: 'var(--danger)' }}/></button>
+                <div key={ii} style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--bg3)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  {/* Description – full width, multiline */}
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    style={{ width: '100%', padding: '6px 8px', fontSize: 12, resize: 'vertical', marginBottom: 6, boxSizing: 'border-box' }}
+                    value={item.description}
+                    onChange={e => setItemField(si, ii, 'description', e.target.value)}
+                    placeholder={lang === 'fr' ? 'Description de la prestation...' : 'Service description...'}
+                  />
+                  {/* Unit / Qty / Price / Delete row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 28px', gap: 6, alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{lang === 'fr' ? 'Unité' : 'Unit'}</div>
+                      <select className="form-control" style={{ padding: '5px 4px', fontSize: 11 }} value={item.unit} onChange={e => setItemField(si, ii, 'unit', e.target.value)}>
+                        {UNITS.map(u => <option key={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{lang === 'fr' ? 'Qté' : 'Qty'}</div>
+                      <input type="number" className="form-control" style={{ padding: '5px 6px', fontSize: 12 }} min="0" value={item.qty} onChange={e => setItemField(si, ii, 'qty', e.target.value)} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 2 }}>{lang === 'fr' ? 'Prix unit.' : 'Unit price'}</div>
+                      <input type="number" className="form-control" style={{ padding: '5px 6px', fontSize: 12 }} min="0" value={item.unitPrice} onChange={e => setItemField(si, ii, 'unitPrice', e.target.value)} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+                      <button className="btn-icon" onClick={() => removeItem(si, ii)}><Trash2 size={12} style={{ color: 'var(--danger)' }}/></button>
+                    </div>
+                  </div>
+                  {/* Line total */}
+                  <div style={{ textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--primary)', marginTop: 4 }}>
+                    = {((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0)).toLocaleString('fr-FR')} {lang === 'fr' ? 'FCFA' : 'FCFA'}
+                  </div>
                 </div>
               ))}
-              <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, marginTop: 4 }} onClick={() => addItem(si)}><Plus size={11}/>{lang === 'fr' ? 'Ajouter une ligne' : 'Add line'}</button>
+              <button className="btn btn-ghost btn-sm" style={{ fontSize: 11, marginTop: 4, width: '100%' }} onClick={() => addItem(si)}><Plus size={11}/>{lang === 'fr' ? '+ Ajouter une ligne' : '+ Add line'}</button>
             </div>
           )}
         </div>
@@ -171,7 +194,7 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
         </div>
       )}
 
-      {/* Main-d'oeuvre & frais supplémentaires */}
+      {/* Adjustments */}
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 4 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>{lang === 'fr' ? 'Ajustements' : 'Adjustments'}</div>
         {(lang === 'fr' ? [['labour',"Main-d'œuvre (FCFA)"],['extra','Frais supplémentaires (FCFA)'],['discount','Remise (FCFA)'],['taxRate','TVA (%)']] : [['labour','Labour (FCFA)'],['extra','Extra charges (FCFA)'],['discount','Discount (FCFA)'],['taxRate','VAT (%)']]).map(([k, lbl]) => (
