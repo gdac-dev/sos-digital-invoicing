@@ -132,6 +132,42 @@ Services started:
 
 ---
 
+## 🖥️ Desktop App (Electron)
+
+SOS DIGITAL can run as a standalone desktop application on Windows, macOS, and Linux without an internet connection.
+
+### Features
+- Fully offline capability
+- Native OS system tray & notifications
+- Native PDF save dialogs
+- WhatsApp deep-link sharing
+
+### Setup & Run
+1. Ensure your local PostgreSQL is running.
+2. In a terminal, run the desktop environment:
+```bash
+cd desktop
+npm install
+npm start
+```
+3. On the first launch, the app will ask for your database connection string. Enter your local PostgreSQL URL.
+4. The app will automatically run migrations and start the backend.
+
+### Packaging
+To build the executable installers (`.exe`, `.dmg`, `.AppImage`):
+```bash
+# First, build the React frontend
+cd client
+npm run build
+
+# Then build the Electron app
+cd ../desktop
+npm run build
+```
+The output installers will be generated in the `desktop/dist/` directory.
+
+---
+
 ## ☁️ Deployment
 
 ### Frontend → Vercel

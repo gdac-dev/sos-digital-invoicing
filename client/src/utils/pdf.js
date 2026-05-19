@@ -243,5 +243,10 @@ function generateUnifiedPDF(inv, lang, qrDataUrl, colors, templateType) {
     doc.text(lang === 'fr' ? 'Contactez-nous' : 'Contact us', w - margin - 8, 296, { align: 'center' });
   }
 
-  doc.save(`${inv.number}.pdf`);
+  if (window.electronAPI) {
+    const arrayBuffer = doc.output('arraybuffer');
+    window.electronAPI.savePdf(`${inv.number}.pdf`, arrayBuffer);
+  } else {
+    doc.save(`${inv.number}.pdf`);
+  }
 }

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
@@ -28,13 +29,33 @@ function AdminRoute({ children }) {
   return user?.role === 'admin' ? children : <Navigate to="/" replace />;
 }
 
-export default function App() {
+function CanViewRoute({ children }) {
+  const { user } = useAuth();
+  return user?.canViewData !== false ? children : <Navigate to="/invoices" replace />;
+}
+
+const Router = window.electronAPI ? HashRouter : BrowserRouter;
+
+function NavigationListener() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (window.electronAPI) {
+      window.electronAPI.onNavigate((path) => {
+        navigate(path);
+      });
+    }
+  }, [navigate]);
+  return null;
+}
+
+function App() {
   return (
-    <BrowserRouter>
+    <Router>
+      <NavigationListener />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<CanViewRoute><Dashboard /></CanViewRoute>} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="invoices/new" element={<InvoiceEditor />} />
           <Route path="invoices/:id/edit" element={<InvoiceEditor />} />
@@ -43,11 +64,13 @@ export default function App() {
           <Route path="clients" element={<CRM />} />
           <Route path="catalog" element={<Catalog />} />
           <Route path="payments" element={<Payments />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={<CanViewRoute><Reports /></CanViewRoute>} />
           <Route path="settings" element={<AdminRoute><Settings /></AdminRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
+
+export default App;

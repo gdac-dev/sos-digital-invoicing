@@ -17,13 +17,13 @@ export default function AppLayout() {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: t.nav.dashboard, end: true },
+    ...(user?.canViewData !== false ? [{ to: '/', icon: LayoutDashboard, label: t.nav.dashboard, end: true }] : []),
     { to: '/invoices', icon: FileText, label: t.nav.invoices },
     { to: '/quotes', icon: Quote, label: t.nav.quotes },
     { to: '/clients', icon: Users, label: t.nav.clients },
     { to: '/catalog', icon: Package, label: t.nav.catalog },
     { to: '/payments', icon: CreditCard, label: t.nav.payments },
-    { to: '/reports', icon: BarChart2, label: t.nav.reports },
+    ...(user?.canViewData !== false ? [{ to: '/reports', icon: BarChart2, label: t.nav.reports }] : []),
   ];
 
   return (

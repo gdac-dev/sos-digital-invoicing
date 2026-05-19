@@ -16,7 +16,12 @@ export const openWhatsApp = (invoiceNumber, lang = 'fr') => {
   const msg = lang === 'fr'
     ? `Bonjour, veuillez trouver ci-joint votre facture SOS DIGITAL #${invoiceNumber}.`
     : `Hello, please find attached your SOS DIGITAL invoice #${invoiceNumber}.`;
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+  if (window.electronAPI) {
+    window.electronAPI.openExternal(`whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`);
+  } else {
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
 };
 
 export const downloadCSV = (data, filename) => {

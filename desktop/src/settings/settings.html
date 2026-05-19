@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Paramètres Base de Données - SOS DIGITAL</title>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #0f172a; padding: 20px; }
+    h2 { color: #0284c7; margin-top: 0; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #475569; }
+    input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    input:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
+    button { background: #0284c7; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
+    button:hover { background: #0369a1; }
+    .help { font-size: 11px; color: #64748b; margin-top: 4px; }
+    #status { margin-top: 15px; font-size: 13px; font-weight: bold; text-align: center; }
+    .success { color: #16a34a; }
+    .error { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <h2>Configuration Base de Données</h2>
+  <p style="font-size: 13px; color: #475569; margin-bottom: 20px;">
+    Veuillez entrer l'URL de connexion à votre base PostgreSQL locale.
+  </p>
+
+  <div class="form-group">
+    <label>URL PostgreSQL</label>
+    <input type="text" id="dbUrl" placeholder="postgresql://user:password@localhost:5432/sos_digital" />
+    <div class="help">Format: postgresql://[user]:[password]@[host]:[port]/[database]</div>
+  </div>
+
+  <button id="saveBtn">Enregistrer et Démarrer</button>
+  
+  <div id="status"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const dbUrlInput = document.getElementById('dbUrl');
+      const saveBtn = document.getElementById('saveBtn');
+      const statusDiv = document.getElementById('status');
+
+      // Load existing config
+      const currentUrl = await window.electronAPI.getConfig('dbUrl');
+      if (currentUrl) dbUrlInput.value = currentUrl;
+
+      saveBtn.addEventListener('click', async () => {
+        const url = dbUrlInput.value.trim();
+        if (!url) {
+          statusDiv.textContent = 'L\'URL est requise.';
+          statusDiv.className = 'error';
+          return;
+        }
+
+        saveBtn.disabled = true;
+        statusDiv.textContent = 'Application de la configuration...';
+        statusDiv.className = '';
+
+        try {
+          const started = await window.electronAPI.setConfig('dbUrl', url);
+          if (started) {
+            statusDiv.textContent = 'Configuration enregistrée ! Redémarrage...';
+            statusDiv.className = 'success';
+            setTimeout(() => window.close(), 1500);
+          } else {
+            statusDiv.textContent = 'Erreur lors du démarrage du serveur local.';
+            statusDiv.className = 'error';
+            saveBtn.disabled = false;
+          }
+        } catch (e) {
+          statusDiv.textContent = 'Erreur: ' + e.message;
+          statusDiv.className = 'error';
+          saveBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

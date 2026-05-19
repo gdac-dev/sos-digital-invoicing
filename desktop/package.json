@@ -1,0 +1,21 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --config electron-builder.yml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.8.3"
+  }
+}
