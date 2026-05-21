@@ -66,7 +66,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/invoices
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyInfo } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'Articles requis' });
     
     // Resolve or create client
@@ -101,8 +101,9 @@ router.post('/', async (req, res) => {
         currency: currency || 'FCFA',
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: notes || null, footer: footer || null,
-        font: font || 'Inter', watermark: watermark || null, stamp: stamp || null, companyInfo: companyInfo || null,
+        font: font || 'Inter', watermark: watermark || null, stamp: stamp || null,
         labour: Number(labour) || 0, extra: Number(extra) || 0,
+        companyData: companyData || null,
         items: {
           create: parsedItems.map(i => ({
             catalogItemId: i.catalogItemId,
@@ -126,7 +127,7 @@ router.post('/', async (req, res) => {
 // PATCH /api/invoices/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyInfo } = req.body;
+    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData } = req.body;
     const updateData = {};
     if (status) updateData.status = status;
     if (templateType) updateData.templateType = templateType;
@@ -138,9 +139,9 @@ router.patch('/:id', async (req, res) => {
     if (font !== undefined) updateData.font = font;
     if (watermark !== undefined) updateData.watermark = watermark;
     if (stamp !== undefined) updateData.stamp = stamp;
-    if (companyInfo !== undefined) updateData.companyInfo = companyInfo;
     if (labour !== undefined) updateData.labour = Number(labour);
     if (extra !== undefined) updateData.extra = Number(extra);
+    if (companyData !== undefined) updateData.companyData = companyData;
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (items) {
       const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);

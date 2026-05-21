@@ -62,9 +62,9 @@ export default function InvoiceEditor() {
   // Auto-save to localStorage
   useEffect(() => {
     if (loadingInvoice) return;
-    const draft = { client, details, sections, extras, notes, design };
+    const draft = { company, client, details, sections, extras, notes, design };
     localStorage.setItem(draftKey, JSON.stringify(draft));
-  }, [client, details, sections, extras, notes, design, loadingInvoice, draftKey]);
+  }, [company, client, details, sections, extras, notes, design, loadingInvoice, draftKey]);
 
   // Load draft or reset if new
   useEffect(() => {
@@ -76,6 +76,7 @@ export default function InvoiceEditor() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
+          if (parsed.company) setCompany(parsed.company);
           if (parsed.client) setClient(parsed.client);
           if (parsed.details) setDetails(parsed.details);
           if (parsed.sections) setSections(parsed.sections);
@@ -94,9 +95,7 @@ export default function InvoiceEditor() {
       .then(r => {
         const inv = r.data;
         setClient({ id: inv.clientId, name: inv.client?.name || '', email: inv.client?.email || '', phone: inv.client?.phone || '', address: inv.client?.address || '', city: inv.client?.city || '' });
-        if (inv.companyInfo) {
-          setCompany(inv.companyInfo);
-        }
+        if (inv.companyData) setCompany(c => ({ ...c, ...inv.companyData }));
         setDetails(d => ({
           ...d,
           number: inv.number || '',
@@ -157,11 +156,11 @@ export default function InvoiceEditor() {
     try {
       const payload = {
         clientId: client.id,
+        companyData: company,
         templateType: design.template, palette: design.palette, language: details.language,
         font: design.font, watermark: design.watermark, stamp: design.stamp,
         taxRate: Number(extras.taxRate), discount: Number(extras.discount),
         labour: Number(extras.labour), extra: Number(extras.extra),
-        companyInfo: company,
         currency: details.currency, dueDate: details.dueDate || null,
         notes: notes.conditions, footer: notes.footer,
         items: sections.flatMap(s => 
