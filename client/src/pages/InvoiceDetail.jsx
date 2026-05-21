@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { ArrowLeft, Download, Send, MessageCircle, Edit, CreditCard, Printer } from 'lucide-react';
 import { exportInvoicePDF } from '../utils/pdf';
 import PaymentModal from '../components/payments/PaymentModal';
+import InvoicePreview from '../components/invoices/InvoicePreview';
 
 const STATUSES = ['draft','sent','viewed','paid','overdue','canceled'];
 
@@ -28,10 +29,18 @@ export default function InvoiceDetail() {
   };
 
   const handleWhatsApp = () => {
-    exportInvoicePDF(invoice, lang);
-    openWhatsApp(invoice.number, lang);
+    handlePDF();
+    openWhatsApp(invoice.number, invoice.companyData?.name || 'SOS DIGITAL', lang);
   };
-  const handlePDF = () => exportInvoicePDF(invoice, lang);
+  
+  const handlePDF = () => {
+    const el = document.getElementById('hidden-invoice-preview');
+    if (el) {
+      exportInvoicePDF(el, { number: invoice.number });
+    } else {
+      toast.error('Erreur lors de la préparation du PDF');
+    }
+  };
 
   if (loading) return <div className="loader"><div className="loader-dot"/><div className="loader-dot"/><div className="loader-dot"/></div>;
   if (!invoice) return <div className="empty-state"><h3>Facture introuvable</h3></div>;
@@ -165,6 +174,33 @@ export default function InvoiceDetail() {
       </div>
 
       {showPayment && <PaymentModal invoiceId={id} onClose={() => { setShowPayment(false); load(); }} />}
+      
+      {/* Hidden preview for PDF export */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}>
+        <div id="hidden-invoice-preview">
+          <InvoicePreview
+            company={invoice.companyData || {}}
+            client={invoice.client || {}}
+            details={{
+              number: invoice.number,
+              issueDate: invoice.issueDate,
+              dueDate: invoice.dueDate,
+              language: invoice.language || 'fr',
+              currency: invoice.currency || 'FCFA'
+            }}
+            sections={[{ id: 's1', title: '', items: invoice.items || [] }]}
+            extras={{ taxRate: invoice.taxRate || 0, discount: invoice.discount || 0 }}
+            notes={invoice.notes || ''}
+            design={{
+              template: invoice.templateType || 'classic',
+              palette: invoice.palette || 'blue',
+              font: invoice.font || 'Inter',
+              watermark: invoice.watermark || null,
+              stamp: invoice.stamp || null
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
