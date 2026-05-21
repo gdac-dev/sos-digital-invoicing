@@ -1,13 +1,87 @@
 import { PALETTES } from './editorConstants';
 import { QRCodeSVG } from 'qrcode.react';
 
-// Format number with locale
-const fmt = (n, currency = 'FCFA') => `${Number(n || 0).toLocaleString('fr-FR')} ${currency}`;
-const fmtN = (n) => Number(n || 0).toLocaleString('fr-FR');
+const fmt = (n, currency = 'FCFA', locale = 'fr-FR') => `${Number(n || 0).toLocaleString(locale)} ${currency}`;
+const fmtN = (n, locale = 'fr-FR') => Number(n || 0).toLocaleString(locale);
+
+const TRANSLATIONS = {
+  fr: {
+    invoice: 'FACTURE',
+    quote: 'DEVIS',
+    no: 'N°',
+    date: 'Date',
+    validity: 'Validité',
+    days: 'jours',
+    dueDate: 'Échéance',
+    billedTo: 'Facturé à',
+    reference: 'Référence',
+    payment: 'Paiement',
+    currency: 'Devise',
+    colNo: 'N°',
+    colDesc: 'Description',
+    colUnit: 'Unité',
+    colQty: 'Qté',
+    colPrice: 'P.U.',
+    colTotal: 'Total',
+    subtotal: 'Sous-total',
+    totalHT: 'Total HT',
+    labour: "Main-d'œuvre",
+    extra: 'Frais supplémentaires',
+    discount: 'Remise',
+    tax: 'TVA',
+    totalTTC: 'TOTAL TTC',
+    conditions: 'Conditions et notes',
+    clientSig: 'Signature client',
+    for: 'Pour',
+    taxId: 'N° fiscal:',
+    contact: 'Contactez-nous'
+  },
+  en: {
+    invoice: 'INVOICE',
+    quote: 'QUOTE',
+    no: 'No.',
+    date: 'Date',
+    validity: 'Validity',
+    days: 'days',
+    dueDate: 'Due Date',
+    billedTo: 'Billed to',
+    reference: 'Reference',
+    payment: 'Payment',
+    currency: 'Currency',
+    colNo: 'No.',
+    colDesc: 'Description',
+    colUnit: 'Unit',
+    colQty: 'Qty',
+    colPrice: 'Price',
+    colTotal: 'Total',
+    subtotal: 'Subtotal',
+    totalHT: 'Subtotal (excl. tax)',
+    labour: 'Labour',
+    extra: 'Extra charges',
+    discount: 'Discount',
+    tax: 'Tax',
+    totalTTC: 'TOTAL',
+    conditions: 'Terms and conditions',
+    clientSig: 'Client signature',
+    for: 'For',
+    taxId: 'Tax ID:',
+    contact: 'Contact us'
+  }
+};
 
 export default function InvoicePreview({ company, client, details, sections, extras, notes, design, onStampClick }) {
   const palette = PALETTES[design.palette] || PALETTES.skyblue;
   const font = design.font || 'Inter';
+  const lang = details.language === 'en' ? 'en' : 'fr';
+  const t = TRANSLATIONS[lang];
+  const locale = lang === 'en' ? 'en-US' : 'fr-FR';
+
+  // Translate default docTitle if matched
+  let displayTitle = design.docTitle;
+  if (displayTitle === 'FACTURE' && lang === 'en') displayTitle = 'INVOICE';
+  if (displayTitle === 'INVOICE' && lang === 'fr') displayTitle = 'FACTURE';
+  if (displayTitle === 'DEVIS' && lang === 'en') displayTitle = 'QUOTE';
+  if (displayTitle === 'QUOTE' && lang === 'fr') displayTitle = 'DEVIS';
 
   // Compute totals
   const sectionTotals = sections.map(sec =>
@@ -87,8 +161,8 @@ export default function InvoicePreview({ company, client, details, sections, ext
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ color: 'white', fontWeight: 900, fontSize: 22, letterSpacing: '-0.5px' }}>{design.docTitle}</div>
-            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 9 }}>N° {details.number || `${new Date().getFullYear()}-XXXX`}</div>
+            <div style={{ color: 'white', fontWeight: 900, fontSize: 22, letterSpacing: '-0.5px' }}>{displayTitle}</div>
+            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 9 }}>{t.no} {details.number || `${new Date().getFullYear()}-XXXX`}</div>
           </div>
         </div>
       ) : isMinimal ? (
@@ -99,8 +173,8 @@ export default function InvoicePreview({ company, client, details, sections, ext
               <div style={{ fontSize: 9, color: '#64748b' }}>{company.activity}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: palette.dark }}>{design.docTitle}</div>
-              <div style={{ fontSize: 9, color: '#64748b' }}>N° {details.number || `${new Date().getFullYear()}-XXXX`}</div>
+              <div style={{ fontWeight: 900, fontSize: 20, color: palette.dark }}>{displayTitle}</div>
+              <div style={{ fontSize: 9, color: '#64748b' }}>{t.no} {details.number || `${new Date().getFullYear()}-XXXX`}</div>
             </div>
           </div>
         </div>
@@ -118,15 +192,15 @@ export default function InvoicePreview({ company, client, details, sections, ext
               <div style={{ fontSize: 9, color: '#475569' }}>{company.activity}</div>
               <div style={{ fontSize: 8.5, color: '#64748b', marginTop: 2 }}>{company.address}{company.city ? `, ${company.city}` : ''}</div>
               <div style={{ fontSize: 8.5, color: '#64748b' }}>{company.phone} · {company.email}</div>
-              {company.taxId && <div style={{ fontSize: 8.5, color: '#64748b' }}>N° fiscal: {company.taxId}</div>}
+              {company.taxId && <div style={{ fontSize: 8.5, color: '#64748b' }}>{t.taxId} {company.taxId}</div>}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 900, fontSize: 20, color: palette.dark, letterSpacing: '-0.3px' }}>{design.docTitle}</div>
-            <div style={{ fontSize: 9, color: '#475569', marginTop: 2 }}>N° {details.number || `${new Date().getFullYear()}-XXXX`}</div>
-            <div style={{ fontSize: 9, color: '#475569' }}>Date : {details.date ? new Date(details.date).toLocaleDateString('fr-FR') : '—'}</div>
-            {details.validity && <div style={{ fontSize: 9, color: '#475569' }}>Validité : {details.validity} jours</div>}
-            {details.dueDate && <div style={{ fontSize: 9, color: '#ef4444', fontWeight: 600 }}>Échéance : {new Date(details.dueDate).toLocaleDateString('fr-FR')}</div>}
+            <div style={{ fontWeight: 900, fontSize: 20, color: palette.dark, letterSpacing: '-0.3px' }}>{displayTitle}</div>
+            <div style={{ fontSize: 9, color: '#475569', marginTop: 2 }}>{t.no} {details.number || `${new Date().getFullYear()}-XXXX`}</div>
+            <div style={{ fontSize: 9, color: '#475569' }}>{t.date} : {details.date ? new Date(details.date).toLocaleDateString(locale) : '—'}</div>
+            {details.validity && <div style={{ fontSize: 9, color: '#475569' }}>{t.validity} : {details.validity} {t.days}</div>}
+            {details.dueDate && <div style={{ fontSize: 9, color: '#ef4444', fontWeight: 600 }}>{t.dueDate} : {new Date(details.dueDate).toLocaleDateString(locale)}</div>}
           </div>
         </div>
       )}
@@ -139,8 +213,8 @@ export default function InvoicePreview({ company, client, details, sections, ext
         <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
           {/* Client block */}
           <div style={{ flex: 1, background: palette.accent + '44', borderLeft: `3px solid ${palette.primary}`, padding: '10px 12px', borderRadius: '0 6px 6px 0' }}>
-            <div style={{ fontSize: 8, fontWeight: 700, color: palette.primary, textTransform: 'uppercase', marginBottom: 4 }}>Facturé à</div>
-            <div style={{ fontWeight: 700, fontSize: 11 }}>{client.name || 'Nom du client'}</div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: palette.primary, textTransform: 'uppercase', marginBottom: 4 }}>{t.billedTo}</div>
+            <div style={{ fontWeight: 700, fontSize: 11 }}>{client.name || '...'}</div>
             {client.address && <div style={{ fontSize: 9, color: '#475569' }}>{client.address}</div>}
             {client.city && <div style={{ fontSize: 9, color: '#475569' }}>{client.city}</div>}
             {client.phone && <div style={{ fontSize: 9, color: '#475569' }}>{client.phone}</div>}
@@ -148,18 +222,17 @@ export default function InvoicePreview({ company, client, details, sections, ext
           </div>
           {/* Details block */}
           <div style={{ width: 160, fontSize: 9, color: '#475569' }}>
-            {details.reference && <div style={{ marginBottom: 2 }}><strong>Référence:</strong> {details.reference}</div>}
-            {details.paymentMethod && <div style={{ marginBottom: 2 }}><strong>Paiement:</strong> {details.paymentMethod}</div>}
-            <div><strong>Devise:</strong> {details.currency}</div>
-            {isModern && <div style={{ marginTop: 4 }}><strong>Date:</strong> {details.date ? new Date(details.date).toLocaleDateString('fr-FR') : '—'}</div>}
+            {details.reference && <div style={{ marginBottom: 2 }}><strong>{t.reference}:</strong> {details.reference}</div>}
+            {details.paymentMethod && <div style={{ marginBottom: 2 }}><strong>{t.payment}:</strong> {details.paymentMethod}</div>}
+            <div><strong>{t.currency}:</strong> {details.currency}</div>
+            {isModern && <div style={{ marginTop: 4 }}><strong>{t.date}:</strong> {details.date ? new Date(details.date).toLocaleDateString(locale) : '—'}</div>}
           </div>
         </div>
 
-        {/* Items Table */}
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
           <thead>
             <tr style={{ background: palette.dark }}>
-              {['N°', 'Description', 'Unité', 'Qté', 'P.U.', 'Total'].map((h, i) => (
+              {[t.colNo, t.colDesc, t.colUnit, t.colQty, t.colPrice, t.colTotal].map((h, i) => (
                 <th key={h} style={{ padding: '6px 8px', color: 'white', fontSize: 8.5, fontWeight: 700, textAlign: i <= 1 ? 'left' : 'right', textTransform: 'uppercase' }}>{h}</th>
               ))}
             </tr>
@@ -176,49 +249,47 @@ export default function InvoicePreview({ company, client, details, sections, ext
                 return (
                   <tr key={`item-${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc' }}>
                     <td style={{ padding: '5px 8px', color: '#000000', fontSize: 8.5 }}>{ii + 1}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>Description...</span>}</td>
+                    <td style={{ padding: '5px 8px', color: '#000000', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>...</span>}</td>
                     <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{item.unit}</td>
                     <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{item.qty}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{fmtN(item.unitPrice)}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontWeight: 600, fontSize: 9 }}>{fmtN(lineTotal)}</td>
+                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{fmtN(item.unitPrice, locale)}</td>
+                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontWeight: 600, fontSize: 9 }}>{fmtN(lineTotal, locale)}</td>
                   </tr>
                 );
               })}
               {sec.title && sections.length > 1 && (
                 <tr key={`sub-${si}`} style={{ background: palette.accent + '88' }}>
-                  <td colSpan={5} style={{ padding: '4px 8px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>Sous-total {sec.title}</td>
-                  <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si])}</td>
+                  <td colSpan={5} style={{ padding: '4px 8px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>{t.subtotal} {sec.title}</td>
+                  <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si], locale)}</td>
                 </tr>
               )}
             </tbody>
           ))}
         </table>
 
-        {/* Totals box */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
           <div style={{ width: 240, background: '#f1f5f9', borderRadius: 8, padding: '12px 14px' }}>
             {[
-              { label: 'Total HT', value: fmt(subtotal, details.currency) },
-              labour > 0 && { label: "Main-d'œuvre", value: fmt(labour, details.currency) },
-              extra > 0 && { label: 'Frais supplémentaires', value: fmt(extra, details.currency) },
-              discount > 0 && { label: 'Remise', value: `- ${fmt(discount, details.currency)}` },
-              taxRate > 0 && { label: `TVA (${taxRate}%)`, value: fmt(taxAmount, details.currency) },
+              { label: t.totalHT, value: fmt(subtotal, details.currency, locale) },
+              labour > 0 && { label: t.labour, value: fmt(labour, details.currency, locale) },
+              extra > 0 && { label: t.extra, value: fmt(extra, details.currency, locale) },
+              discount > 0 && { label: t.discount, value: `- ${fmt(discount, details.currency, locale)}` },
+              taxRate > 0 && { label: `${t.tax} (${taxRate}%)`, value: fmt(taxAmount, details.currency, locale) },
             ].filter(Boolean).map(({ label, value }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#475569', marginBottom: 4 }}>
                 <span>{label}</span><span>{value}</span>
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 13, padding: '7px 10px', marginTop: 6, background: palette.primary, color: 'white', borderRadius: 6 }}>
-              <span>TOTAL TTC</span><span>{fmt(total, details.currency)}</span>
+              <span>{t.totalTTC}</span><span>{fmt(total, details.currency, locale)}</span>
             </div>
           </div>
         </div>
 
-        {/* Notes */}
         {(notes.conditions || notes.footer) && (
           <div style={{ borderTop: `1px solid ${palette.accent}`, paddingTop: 10, marginBottom: 12 }}>
             {notes.conditions && <>
-              <div style={{ fontSize: 8, fontWeight: 700, color: palette.primary, textTransform: 'uppercase', marginBottom: 3 }}>Conditions et notes</div>
+              <div style={{ fontSize: 8, fontWeight: 700, color: palette.primary, textTransform: 'uppercase', marginBottom: 3 }}>{t.conditions}</div>
               <div style={{ fontSize: 8.5, color: '#475569', lineHeight: 1.5 }}>{notes.conditions}</div>
             </>}
             {notes.footer && <div style={{ fontSize: 8, color: '#94a3b8', marginTop: 6, fontStyle: 'italic' }}>{notes.footer}</div>}
@@ -227,7 +298,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
 
         {/* Signatures */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, paddingTop: 12, borderTop: `1px solid #e2e8f0` }}>
-          {['Signature client', `Pour ${company.name}`].map(lbl => (
+          {[t.clientSig, `${t.for} ${company.name}`].map(lbl => (
             <div key={lbl} style={{ textAlign: 'center' }}>
               <div style={{ borderTop: `1px solid #94a3b8`, width: 110, margin: '0 auto 4px' }} />
               <div style={{ fontSize: 8, color: '#94a3b8' }}>{lbl}</div>
@@ -238,11 +309,11 @@ export default function InvoicePreview({ company, client, details, sections, ext
         {/* Footer with QR Code */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 8, borderTop: `2px solid ${palette.primary}` }}>
           <div style={{ fontSize: 7.5, color: '#94a3b8', flex: 1, paddingRight: 10 }}>
-            {company.name} · {company.phone} · {company.email}{company.taxId ? ` · N° fiscal: ${company.taxId}` : ''}
+            {company.name} · {company.phone} · {company.email}{company.taxId ? ` · ${t.taxId} ${company.taxId}` : ''}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <QRCodeSVG value="https://wa.me/237653522435" size={40} level="M" />
-            <span style={{ fontSize: 6, color: '#94a3b8' }}>{details.language === 'en' ? 'Contact us' : 'Contactez-nous'}</span>
+            <span style={{ fontSize: 6, color: '#94a3b8' }}>{t.contact}</span>
           </div>
         </div>
       </div>
