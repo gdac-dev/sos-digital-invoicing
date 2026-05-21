@@ -88,3 +88,28 @@ export const sendInvoiceEmail = async (invoice, recipientEmail, recipientName) =
     html: emailBase(content),
   });
 };
+
+export const sendAdminNotificationEmail = async (userEmail, message) => {
+  const content = `
+    <h2 style="color:#0f172a;font-size:22px;margin:0 0 16px;">Demande d'assistance (Chatbot)</h2>
+    <p style="color:#475569;font-size:15px;line-height:1.6;">Bonjour,</p>
+    <p style="color:#475569;font-size:15px;line-height:1.6;">
+      Un utilisateur a demandé à contacter l'administration depuis le Chatbot SOS DIGITAL.
+    </p>
+    <div style="background:#f0f9ff;border-left:4px solid ${brandColor};padding:16px 20px;border-radius:0 8px 8px 0;margin:24px 0;">
+      <p style="margin:0;color:#0369a1;font-size:14px;font-weight:600;">Message de l'utilisateur :</p>
+      <p style="margin:8px 0 0;color:#0f172a;font-size:14px;font-style:italic;">"${message}"</p>
+      ${userEmail ? `<p style="margin:12px 0 0;color:#0369a1;font-size:14px;"><strong>Email du demandeur :</strong> ${userEmail}</p>` : ''}
+    </div>
+    <p style="color:#475569;font-size:15px;line-height:1.6;">
+      Veuillez prendre en charge cette demande dès que possible.
+    </p>
+    <p style="color:#475569;font-size:15px;margin-top:24px;">Système automatisé,<br><strong>Chatbot SOS DIGITAL</strong></p>`;
+
+  await transporter.sendMail({
+    from: process.env.FROM_EMAIL,
+    to: 'arsenedemenou@gmail.com',
+    subject: `🚨 Demande d'assistance Chatbot`,
+    html: emailBase(content),
+  });
+};

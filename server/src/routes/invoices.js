@@ -66,7 +66,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/invoices
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyInfo } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'Articles requis' });
     
     // Resolve or create client
@@ -84,9 +84,12 @@ router.post('/', async (req, res) => {
     const number = await generateNumber();
     const subtotal = parsedItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
     const disc = parseFloat(discount) || 0;
+    const lab = parseFloat(labour) || 0;
+    const ext = parseFloat(extra) || 0;
     const tax = parseFloat(taxRate) || 0;
-    const taxAmount = (subtotal - disc) * (tax / 100);
-    const total = subtotal - disc + taxAmount;
+    const baseForTax = subtotal - disc + lab + ext;
+    const taxAmount = baseForTax * (tax / 100);
+    const total = baseForTax + taxAmount;
 
     const invoice = await prisma.invoice.create({
       data: {
@@ -98,6 +101,8 @@ router.post('/', async (req, res) => {
         currency: currency || 'FCFA',
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: notes || null, footer: footer || null,
+        font: font || 'Inter', watermark: watermark || null, stamp: stamp || null, companyInfo: companyInfo || null,
+        labour: Number(labour) || 0, extra: Number(extra) || 0,
         items: {
           create: parsedItems.map(i => ({
             catalogItemId: i.catalogItemId,
@@ -121,7 +126,7 @@ router.post('/', async (req, res) => {
 // PATCH /api/invoices/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items } = req.body;
+    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyInfo } = req.body;
     const updateData = {};
     if (status) updateData.status = status;
     if (templateType) updateData.templateType = templateType;
@@ -130,15 +135,25 @@ router.patch('/:id', async (req, res) => {
     if (currency) updateData.currency = currency;
     if (notes !== undefined) updateData.notes = notes;
     if (footer !== undefined) updateData.footer = footer;
+    if (font !== undefined) updateData.font = font;
+    if (watermark !== undefined) updateData.watermark = watermark;
+    if (stamp !== undefined) updateData.stamp = stamp;
+    if (companyInfo !== undefined) updateData.companyInfo = companyInfo;
+    if (labour !== undefined) updateData.labour = Number(labour);
+    if (extra !== undefined) updateData.extra = Number(extra);
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (items) {
       const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-      const taxAmt = (subtotal - (discount || 0)) * ((taxRate || 0) / 100);
+      const disc = discount || 0;
+      const lab = labour || 0;
+      const ext = extra || 0;
+      const baseForTax = subtotal - disc + lab + ext;
+      const taxAmt = baseForTax * ((taxRate || 0) / 100);
       updateData.subtotal = subtotal;
       updateData.taxRate = taxRate || 0;
       updateData.taxAmount = taxAmt;
-      updateData.discount = discount || 0;
-      updateData.total = subtotal - (discount || 0) + taxAmt;
+      updateData.discount = disc;
+      updateData.total = baseForTax + taxAmt;
       await prisma.invoiceItem.deleteMany({ where: { invoiceId: req.params.id } });
       updateData.items = {
         create: items.map(i => ({

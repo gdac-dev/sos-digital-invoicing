@@ -186,7 +186,19 @@ export function PrestationsTab({ sections, setSections, catalog, extras, setExtr
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {catalog.map(c => (
               <button key={c.id} className="btn btn-ghost btn-sm" style={{ fontSize: 10 }}
-                onClick={() => setSections(s => { const copy = [...s]; if (!copy.length) copy.push({ title: '', items: [] }); copy[copy.length-1].items.push({ description: c.name, unit: 'Unité', qty: 1, unitPrice: c.unitPrice }); return copy; })}>
+                onClick={() => setSections(s => {
+                  const copy = [...s];
+                  if (!copy.length) {
+                    copy.push({ title: '', items: [{ description: c.name, unit: 'Unité', qty: 1, unitPrice: c.unitPrice }] });
+                  } else {
+                    const lastIdx = copy.length - 1;
+                    copy[lastIdx] = { 
+                      ...copy[lastIdx], 
+                      items: [...copy[lastIdx].items, { description: c.name, unit: 'Unité', qty: 1, unitPrice: c.unitPrice }] 
+                    };
+                  }
+                  return copy;
+                })}>
                 + {c.name}
               </button>
             ))}

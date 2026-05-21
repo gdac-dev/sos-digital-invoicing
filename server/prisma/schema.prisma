@@ -74,6 +74,12 @@ model Invoice {
   dueDate      DateTime?
   notes        String?
   footer       String?
+  font         String        @default("Inter")
+  watermark    Json?
+  stamp        Json?
+  companyInfo  Json?
+  labour       Float         @default(0)
+  extra        Float         @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 

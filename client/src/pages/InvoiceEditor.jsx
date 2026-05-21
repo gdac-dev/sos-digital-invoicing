@@ -57,11 +57,35 @@ export default function InvoiceEditor() {
   const [design, setDesign] = useState(INITIAL_DESIGN);
 
   const TABS = lang === 'fr' ? TABS_FR : TABS_EN;
+  const draftKey = `invoice_draft_${id || 'new'}`;
 
+  // Auto-save to localStorage
+  useEffect(() => {
+    if (loadingInvoice) return;
+    const draft = { client, details, sections, extras, notes, design };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+  }, [client, details, sections, extras, notes, design, loadingInvoice, draftKey]);
+
+  // Load draft or reset if new
   useEffect(() => {
     api.get('/clients', { params: { limit: 200 } }).then(r => setClients(r.data.clients || []));
     api.get('/catalog').then(r => setCatalog(r.data || []));
-  }, []);
+
+    if (!isEditing) {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.client) setClient(parsed.client);
+          if (parsed.details) setDetails(parsed.details);
+          if (parsed.sections) setSections(parsed.sections);
+          if (parsed.extras) setExtras(parsed.extras);
+          if (parsed.notes) setNotes(parsed.notes);
+          if (parsed.design) setDesign(parsed.design);
+        } catch (e) { console.error('Failed to parse draft', e); }
+      }
+    }
+  }, [isEditing, draftKey]);
 
   // Load existing invoice when editing
   useEffect(() => {
@@ -70,6 +94,9 @@ export default function InvoiceEditor() {
       .then(r => {
         const inv = r.data;
         setClient({ id: inv.clientId, name: inv.client?.name || '', email: inv.client?.email || '', phone: inv.client?.phone || '', address: inv.client?.address || '', city: inv.client?.city || '' });
+        if (inv.companyInfo) {
+          setCompany(inv.companyInfo);
+        }
         setDetails(d => ({
           ...d,
           number: inv.number || '',
@@ -82,9 +109,18 @@ export default function InvoiceEditor() {
           ...e,
           taxRate: inv.taxRate ?? 19.25,
           discount: inv.discount ?? 0,
+          labour: inv.labour ?? 0,
+          extra: inv.extra ?? 0,
         }));
         setNotes({ conditions: inv.notes || '', footer: inv.footer || '' });
-        setDesign(d => ({ ...d, template: inv.templateType || 'elegant', palette: inv.palette || 'skyblue' }));
+        setDesign(d => ({ 
+          ...d, 
+          template: inv.templateType || 'elegant', 
+          palette: inv.palette || 'skyblue',
+          font: inv.font || 'Inter',
+          watermark: inv.watermark || d.watermark,
+          stamp: inv.stamp || d.stamp
+        }));
         // Group flat items back into sections based on sectionTitle
         const loadedSections = [];
         let currentSection = null;
@@ -122,7 +158,10 @@ export default function InvoiceEditor() {
       const payload = {
         clientId: client.id,
         templateType: design.template, palette: design.palette, language: details.language,
+        font: design.font, watermark: design.watermark, stamp: design.stamp,
         taxRate: Number(extras.taxRate), discount: Number(extras.discount),
+        labour: Number(extras.labour), extra: Number(extras.extra),
+        companyInfo: company,
         currency: details.currency, dueDate: details.dueDate || null,
         notes: notes.conditions, footer: notes.footer,
         items: sections.flatMap(s => 
@@ -143,37 +182,16 @@ export default function InvoiceEditor() {
         await api.post('/invoices', payload);
         toast.success(lang === 'fr' ? 'Facture créée !' : 'Invoice created!');
       }
+      localStorage.removeItem(draftKey);
       navigate('/invoices');
     } catch (e) { toast.error(e.response?.data?.error || 'Error'); }
     finally { setSaving(false); }
   };
 
   const handleExportPDF = () => {
-    const exportedItems = sections.flatMap(s => 
-      s.items
-        .filter(i => i.description?.trim() || parseFloat(i.unitPrice) > 0)
-        .map(i => ({
-          sectionTitle: s.title || '',
-          description: i.description || '—', 
-          quantity: parseFloat(i.qty) || 1,
-          unitPrice: parseFloat(i.unitPrice) || 0,
-          total: (parseFloat(i.qty) || 1) * (parseFloat(i.unitPrice) || 0),
-        }))
-    );
-    const sub = exportedItems.reduce((s, i) => s + i.total, 0);
-    const disc = parseFloat(extras.discount) || 0, tax = parseFloat(extras.taxRate) || 0;
-    const taxAmt = (sub - disc) * tax / 100;
-    
-    exportInvoicePDF({
-      templateType: design.template, palette: design.palette,
+    exportInvoicePDF(document.getElementById('invoice-preview-container'), {
       number: details.number || `${new Date().getFullYear()}-XXXX`,
-      currency: details.currency || 'FCFA',
-      issueDate: details.date || new Date(), dueDate: details.dueDate,
-      subtotal: sub, taxRate: tax, taxAmount: taxAmt, discount: disc, total: sub - disc + taxAmt,
-      notes: notes.conditions,
-      client: { name: client.name || 'Client', email: client.email, phone: client.phone },
-      items: exportedItems,
-    }, details.language);
+    });
   };
 
   if (loadingInvoice) return (
@@ -192,7 +210,7 @@ export default function InvoiceEditor() {
       <div style={{ fontSize: 10, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         👁 {lang === 'fr' ? 'Aperçu temps réel' : 'Live Preview'}
       </div>
-      <div style={{ transform: isMobile ? `scale(${Math.min(1, (window.innerWidth - 16) / 595)})` : 'none', transformOrigin: 'top center', marginBottom: isMobile ? `-${842 * (1 - Math.min(1, (window.innerWidth - 16) / 595))}px` : 0 }}>
+      <div id="invoice-preview-container" style={{ transform: isMobile ? `scale(${Math.min(1, (window.innerWidth - 16) / 595)})` : 'none', transformOrigin: 'top center', marginBottom: isMobile ? `-${842 * (1 - Math.min(1, (window.innerWidth - 16) / 595))}px` : 0 }}>
         <InvoicePreview company={company} client={client} details={details} sections={sections} extras={extras} notes={notes} design={design} onStampClick={handleStampClick} />
       </div>
       <div style={{ fontSize: 10, color: '#94a3b8', paddingBottom: 16 }}>A4 · {design.font}</div>

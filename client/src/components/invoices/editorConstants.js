@@ -16,7 +16,7 @@ export const TEMPLATES = {
   elegant:  'Élégant (défaut)',
   classic:  'Classique',
   modern:   'Moderne',
-  minimal:  'Minimaliste',
+  minimalist:  'Minimaliste',
 };
 
 export const WATERMARK_STYLES = ['Texte estompé', 'Contour', 'Diagonal'];

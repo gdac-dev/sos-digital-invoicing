@@ -13,6 +13,7 @@ import catalogRoutes from './routes/catalog.js';
 import paymentRoutes from './routes/payments.js';
 import reportRoutes from './routes/reports.js';
 import dashboardRoutes from './routes/dashboard.js';
+import chatbotRoutes from './routes/chatbot.js';
 import { startReminderCron } from './utils/cron.js';
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.use('/api/catalog', catalogRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'SOS DIGITAL API' }));
@@ -69,3 +71,4 @@ app.listen(PORT, '0.0.0.0', async () => {
 });
 
 export default app;
+// Trigger restart

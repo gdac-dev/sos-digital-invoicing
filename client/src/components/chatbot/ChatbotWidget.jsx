@@ -48,26 +48,38 @@ export default function ChatbotWidget() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
 
-  const getAnswer = (q) => {
-    const lower = q.toLowerCase();
-    const faq = FAQ[lang];
-    const match = faq.find(f => lower.includes(f.q));
-    return match?.a || (lang === 'fr'
-      ? '🤔 Je n\'ai pas compris. Essayez : "créer une facture", "ajouter un client", "générer un devis".'
-      : '🤔 I didn\'t understand. Try: "create invoice", "add client", "create quote".');
-  };
-
-  const sendMessage = (text) => {
+  // We'll use api from utils/api
+  const sendMessage = async (text) => {
     const msg = text || input.trim();
     if (!msg) return;
     setInput('');
     setMsgCount(c => c + 1);
     setMessages(m => [...m, { from: 'user', text: msg }]);
     setTyping(true);
-    setTimeout(() => {
-      setMessages(m => [...m, { from: 'bot', text: getAnswer(msg) }]);
+    
+    try {
+      // Get auth user from localStorage to pass email if available
+      let userEmail = null;
+      try {
+        const auth = JSON.parse(localStorage.getItem('auth'));
+        userEmail = auth?.user?.email;
+      } catch(e) {}
+
+      // Call backend api for chatbot
+      // We need to import api at the top, or just use fetch
+      const res = await fetch('http://localhost:3001/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, lang, userEmail })
+      });
+      const data = await res.json();
+      
+      setMessages(m => [...m, { from: 'bot', text: data.reply || (lang === 'fr' ? 'Erreur de réponse' : 'Response error') }]);
+    } catch (e) {
+      setMessages(m => [...m, { from: 'bot', text: lang === 'fr' ? 'Désolé, je suis hors ligne actuellement.' : 'Sorry, I am currently offline.' }]);
+    } finally {
       setTyping(false);
-    }, 600);
+    }
   };
 
   const renderText = (text) => text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
