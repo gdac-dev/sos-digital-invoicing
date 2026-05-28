@@ -32,7 +32,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 768,
     show: false,
-    icon: path.join(__dirname, 'icon.png'),
+    icon: path.join(__dirname, '../build/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -124,7 +124,7 @@ function setupMenu() {
 }
 
 function setupTray() {
-  tray = new Tray(path.join(__dirname, 'icon.png'));
+  tray = new Tray(path.join(__dirname, '../build/icon.png')); // We will provide an icon later
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Ouvrir', click: () => mainWindow.show() },
     { label: 'Nouvelle Facture', click: () => {
@@ -162,25 +162,8 @@ function runDatabaseMigrations(serverDir, dbUrl) {
 
     pushProc.on('close', (code) => {
       if (code === 0) {
-        console.log('Migrations successful. Running seed...');
-        
-        // Now run the seed script to ensure admin user exists
-        const seedPath = path.join(serverDir, 'prisma', 'seed.js');
-        if (fs.existsSync(seedPath)) {
-          const seedProc = fork(seedPath, [], {
-            cwd: serverDir,
-            env: { ...process.env, DATABASE_URL: dbUrl, ELECTRON_RUN_AS_NODE: '1' }
-          });
-          
-          seedProc.on('error', (err) => console.error('Seed process error:', err));
-          seedProc.on('close', (seedCode) => {
-            console.log(`Seed process exited with code ${seedCode}`);
-            resolve(true);
-          });
-        } else {
-          console.warn('Seed script not found, skipping seed.');
-          resolve(true);
-        }
+        console.log('Migrations successful');
+        resolve(true);
       } else {
         console.error(`Migrations failed with code ${code}`);
         resolve(false);
