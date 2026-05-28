@@ -11,11 +11,13 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "devDependencies": {
+  "dependencies": {
     "dotenv": "^17.4.2",
-    "electron": "^42.1.0",
-    "electron-builder": "^26.8.1",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1"
   }
 }
