@@ -45,7 +45,7 @@ export default function Login() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{ width: 80, height: 80, borderRadius: 20, overflow: 'hidden', margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(14,165,233,0.3)' }}>
-            <img src="/logo.jpeg" alt="SOS DIGITAL" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="./logo.jpeg" alt="SOS DIGITAL" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, fontFamily: 'Inter,sans-serif', color: 'var(--text)', marginBottom: 6 }}>
             SOS DIGITAL

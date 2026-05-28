@@ -34,7 +34,7 @@ export default function AppLayout() {
       {/* Sidebar */}
       <aside className={`sidebar ${sideOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <img src="/logo.jpeg" alt="SOS DIGITAL" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />
+          <img src="./logo.jpeg" alt="SOS DIGITAL" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />
           <div>
             <div className="brand-name">SOS DIGITAL</div>
             <div className="brand-sub">{t.app.subtitle}</div>

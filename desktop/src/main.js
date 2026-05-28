@@ -162,8 +162,27 @@ function runDatabaseMigrations(serverDir, dbUrl) {
 
     pushProc.on('close', (code) => {
       if (code === 0) {
-        console.log('Migrations successful');
-        resolve(true);
+        console.log('Migrations successful, running seed...');
+        
+        const seedPath = path.join(serverDir, 'prisma', 'seed.js');
+        if (fs.existsSync(seedPath)) {
+          const seedProc = fork(seedPath, [], {
+            cwd: serverDir,
+            env: { ...process.env, DATABASE_URL: dbUrl, ELECTRON_RUN_AS_NODE: '1' }
+          });
+          
+          seedProc.on('error', (err) => {
+            console.error('Seed process error:', err);
+            resolve(true); // Still resolve
+          });
+          
+          seedProc.on('close', () => {
+            console.log('Seeding completed');
+            resolve(true);
+          });
+        } else {
+          resolve(true);
+        }
       } else {
         console.error(`Migrations failed with code ${code}`);
         resolve(false);
