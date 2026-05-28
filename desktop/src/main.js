@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, shell, Notification, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { fork } = require('child_process');
 let store;
 
 async function initStore() {
@@ -48,7 +47,9 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../../client/dist/index.html'));
+    const clientPath = path.join(process.resourcesPath, 'client', 'dist', 'index.html');
+    console.log('Loading client from:', clientPath);
+    mainWindow.loadFile(clientPath);
   }
 
   setupMenu();
@@ -140,96 +141,87 @@ function setupTray() {
   tray.on('click', () => mainWindow.show());
 }
 
-function runDatabaseMigrations(serverDir, dbUrl) {
-  return new Promise((resolve, reject) => {
-    console.log('Running Database Migrations...');
-    
-    const prismaPath = path.join(serverDir, 'node_modules', 'prisma', 'build', 'index.js');
-    if (!fs.existsSync(prismaPath)) {
-      console.warn('Prisma CLI not found at', prismaPath, 'Skipping migrations.');
-      return resolve(true);
-    }
-
-    const pushProc = fork(prismaPath, ['db', 'push'], {
-      cwd: serverDir,
-      env: { ...process.env, DATABASE_URL: dbUrl, ELECTRON_RUN_AS_NODE: '1' }
-    });
-
-    pushProc.on('error', (err) => {
-      console.error('Migration process error:', err);
-      resolve(false); // resolve instead of reject so app doesn't crash if unhandled
-    });
-
-    pushProc.on('close', (code) => {
-      if (code === 0) {
-        console.log('Migrations successful, running seed...');
-        
-        const seedPath = path.join(serverDir, 'prisma', 'seed.js');
-        if (fs.existsSync(seedPath)) {
-          const seedProc = fork(seedPath, [], {
-            cwd: serverDir,
-            env: { ...process.env, DATABASE_URL: dbUrl, ELECTRON_RUN_AS_NODE: '1' }
-          });
-          
-          seedProc.on('error', (err) => {
-            console.error('Seed process error:', err);
-            resolve(true); // Still resolve
-          });
-          
-          seedProc.on('close', () => {
-            console.log('Seeding completed');
-            resolve(true);
-          });
-        } else {
-          resolve(true);
-        }
-      } else {
-        console.error(`Migrations failed with code ${code}`);
-        resolve(false);
-      }
-    });
-  });
-}
+const { spawn } = require('child_process');
 
 function startBackend() {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const dbUrl = store.get('dbUrl');
     if (!dbUrl) {
       return resolve(false); // Backend needs DB config
     }
 
     const serverDir = IS_DEV 
-      ? path.join(__dirname, '../../../server') 
+      ? path.join(__dirname, '../../server') 
       : path.join(process.resourcesPath, 'server');
-      
-    try {
-      await runDatabaseMigrations(serverDir, dbUrl);
-    } catch (e) {
-      console.error(e);
-      // We still try to start the backend even if migrations fail
-    }
 
     const serverEntry = path.join(serverDir, 'src', 'index.js');
     
-    serverProcess = fork(serverEntry, [], {
+    console.log('Starting backend server...');
+    console.log('  Server dir:', serverDir);
+    console.log('  Entry:', serverEntry);
+    console.log('  execPath:', process.execPath);
+    
+    const serverEnv = {
+      ...process.env,
+      DATABASE_URL: dbUrl,
+      PORT: String(PORT),
+      NODE_ENV: IS_DEV ? 'development' : 'production',
+      JWT_SECRET: 'local-desktop-secret-sos-digital',
+      CLIENT_URL: `http://localhost:5173,file://`,
+      ELECTRON_RUN_AS_NODE: '1'
+    };
+
+    serverProcess = spawn(process.execPath, [serverEntry], {
       cwd: serverDir,
-      env: {
-        ...process.env,
-        DATABASE_URL: dbUrl,
-        PORT: PORT,
-        NODE_ENV: IS_DEV ? 'development' : 'production',
-        JWT_SECRET: 'local-desktop-secret-sos-digital',
-        CLIENT_URL: `http://localhost:5173,file://`,
-        ELECTRON_RUN_AS_NODE: '1'
-      },
-      stdio: 'inherit'
+      env: serverEnv,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
+    });
+
+    serverProcess.stdout.on('data', (data) => {
+      console.log('[SERVER]', data.toString().trim());
+    });
+
+    serverProcess.stderr.on('data', (data) => {
+      console.error('[SERVER ERR]', data.toString().trim());
     });
 
     serverProcess.on('error', (err) => {
-      console.error('Backend process error:', err);
+      console.error('Backend process spawn error:', err);
     });
 
-    setTimeout(() => resolve(true), 2500);
+    serverProcess.on('exit', (code) => {
+      console.log('Backend process exited with code:', code);
+    });
+
+    // Wait for server to be ready by polling the health endpoint
+    let attempts = 0;
+    const maxAttempts = 20;
+    const checkReady = () => {
+      attempts++;
+      const http = require('http');
+      const req = http.get(`http://localhost:${PORT}/api/health`, (res) => {
+        if (res.statusCode === 200) {
+          console.log('Backend server is ready!');
+          resolve(true);
+        } else if (attempts < maxAttempts) {
+          setTimeout(checkReady, 500);
+        } else {
+          console.warn('Backend did not respond OK, proceeding anyway');
+          resolve(true);
+        }
+      });
+      req.on('error', () => {
+        if (attempts < maxAttempts) {
+          setTimeout(checkReady, 500);
+        } else {
+          console.warn('Backend health check timed out, proceeding anyway');
+          resolve(true);
+        }
+      });
+      req.setTimeout(1000);
+    };
+    setTimeout(checkReady, 1500);
   });
 }
 
