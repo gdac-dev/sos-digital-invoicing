@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -21,6 +22,29 @@ dotenv.config();
 export const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Ensure default admin user exists on every startup
+async function ensureAdminUser() {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@sosdigital.cm';
+    const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
+    if (!existing) {
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@SOS2024', 12);
+      await prisma.user.create({
+        data: {
+          name: process.env.ADMIN_NAME || 'Administrateur SOS',
+          email: adminEmail,
+          password: hashedPassword,
+          role: 'admin',
+          canViewData: true,
+        },
+      });
+      console.log(`✅ Admin user created: ${adminEmail}`);
+    }
+  } catch (err) {
+    console.error('Could not ensure admin user:', err.message);
+  }
+}
 
 // Security middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
@@ -67,8 +91,9 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 SOS DIGITAL API running on port ${PORT}`);
+  await ensureAdminUser();
   await startReminderCron();
 });
 
 export default app;
-// Trigger restart
+
