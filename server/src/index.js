@@ -91,7 +91,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, '127.0.0.1', async () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 SOS DIGITAL API running on port ${PORT}`);
   await ensureAdminUser();
   await startReminderCron();
