@@ -43,9 +43,19 @@ export default function Login() {
       }
       navigate('/');
     } catch (err) {
-      // Assuming backend returns error message in err.response.data.error
       const msg = err.response?.data?.error;
-      if (msg === 'USER_DELETED') {
+      
+      if (!err.response) {
+        // Network error (server offline)
+        const offlineMsg = lang === 'fr' ? "Erreur réseau : Serveur injoignable" : "Network error: Server unreachable";
+        setErrors({ form: offlineMsg });
+        toast.error(offlineMsg);
+      } else if (err.response.status === 500) {
+        // Database offline or server error
+        const serverMsg = lang === 'fr' ? "Erreur serveur : Base de données hors ligne ?" : "Server error: Database offline?";
+        setErrors({ form: msg || serverMsg });
+        toast.error(msg || serverMsg);
+      } else if (msg === 'USER_DELETED') {
         const errorText = lang === 'fr' ? "L'utilisateur n'existe pas" : "User does not exist";
         setErrors({ email: errorText });
         toast.error(errorText);
