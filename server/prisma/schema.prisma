@@ -12,7 +12,7 @@ model User {
   name        String
   email       String    @unique
   password    String
-  role        String    @default("sales")
+  role        String    @default("agent")
   canViewData Boolean   @default(true)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())

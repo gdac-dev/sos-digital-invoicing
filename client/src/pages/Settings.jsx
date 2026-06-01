@@ -5,7 +5,7 @@ import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, Shield, Users, AlertTriangle } from 'lucide-react';
 
-const ROLES = ['admin', 'sales', 'accounting'];
+const ROLES = ['admin', 'agent', 'accounting'];
 
 export default function Settings() {
   const { t, lang } = useLang();
@@ -13,7 +13,7 @@ export default function Settings() {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'sales', canViewData: true });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'agent', canViewData: true });
   const [saving, setSaving] = useState(false);
 
   const load = () => api.get('/users').then(r => setUsers(r.data));
@@ -21,7 +21,7 @@ export default function Settings() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', email: '', password: '', role: 'sales', canViewData: true });
+    setForm({ name: '', email: '', password: '', role: 'agent', canViewData: true });
     setShowModal(true);
   };
   const openEdit = (u) => { setEditing(u); setForm({ ...u, password: '' }); setShowModal(true); };
@@ -60,7 +60,7 @@ export default function Settings() {
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
 
-  const roleColors = { admin: '#ef4444', sales: '#0ea5e9', accounting: '#8b5cf6' };
+  const roleColors = { admin: '#ef4444', agent: '#0ea5e9', accounting: '#8b5cf6' };
   const roleLabels = t.settings.roles;
 
   return (

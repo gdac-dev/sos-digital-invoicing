@@ -175,11 +175,19 @@ export default function Login() {
             {isRegister && (
               <div className="form-group">
                 <label className="form-label">{t.auth.confirmPassword}</label>
-                <input
-                  id="confirmPassword" type="password" className="form-control" required
-                  placeholder="••••••••" style={getErrorStyle('confirmPassword')}
-                  value={form.confirmPassword} onChange={e => { setForm(f => ({ ...f, confirmPassword: e.target.value })); setErrors(e => ({...e, confirmPassword: null})); }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="confirmPassword" type={showPw ? 'text' : 'password'} className="form-control" required
+                    placeholder="••••••••" style={{ paddingRight: 44, ...getErrorStyle('confirmPassword') }}
+                    value={form.confirmPassword} onChange={e => { setForm(f => ({ ...f, confirmPassword: e.target.value })); setErrors(e => ({...e, confirmPassword: null})); }}
+                  />
+                  <button type="button" onClick={() => setShowPw(s => !s)} style={{
+                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                    background: 'transparent', color: 'var(--text-muted)', padding: 4, border: 'none', cursor: 'pointer'
+                  }}>
+                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
                 {errors.confirmPassword && <div style={{ color: 'var(--danger)', fontSize: 11, marginTop: 4 }}>{errors.confirmPassword}</div>}
               </div>
             )}

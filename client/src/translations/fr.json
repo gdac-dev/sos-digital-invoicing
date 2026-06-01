@@ -80,7 +80,7 @@
     "name": "Nom", "email": "Email", "role": "Rôle", "password": "Mot de passe",
     "canView": "Peut voir les données", "active": "Actif",
     "deleteUser": "Supprimer l'utilisateur (Admin uniquement)",
-    "roles": { "admin": "Administrateur", "sales": "Commercial", "accounting": "Comptabilité" }
+    "roles": { "admin": "Administrateur", "agent": "Agent", "accounting": "Comptabilité" }
   },
   "common": {
     "search": "Rechercher", "save": "Enregistrer", "cancel": "Annuler",
