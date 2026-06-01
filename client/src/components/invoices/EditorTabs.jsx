@@ -35,7 +35,7 @@ export function EntrepriseTab({ company, setCompany }) {
           <input type="file" accept="image/*" onChange={handleLogo} style={{ fontSize: 11, marginTop: 4, display: 'block' }} />
         </div>
       </div>
-      {[['name','Nom entreprise *'], ['activity','Activité'], ['address','Adresse'], ['city','Ville'], ['country','Pays'], ['phone','Téléphone'], ['email','Email'], ['taxId','N° fiscal / RCCM']].map(([k, lbl]) => (
+      {[['name', lang === 'fr' ? 'Nom entreprise *' : 'Company Name *'], ['activity', lang === 'fr' ? 'Activité' : 'Activity'], ['address', lang === 'fr' ? 'Adresse' : 'Address'], ['city', lang === 'fr' ? 'Ville' : 'City'], ['country', lang === 'fr' ? 'Pays' : 'Country'], ['phone', lang === 'fr' ? 'Téléphone' : 'Phone'], ['email', 'Email'], ['taxId', lang === 'fr' ? 'N° fiscal / RCCM' : 'Tax ID / RCCM']].map(([k, lbl]) => (
         <div key={k} className="form-group" style={{ margin: 0 }}>
           <label className="form-label">{lbl}</label>
           <input className="form-control" value={company[k] || ''} onChange={e => set(k, e.target.value)} />

@@ -3,6 +3,7 @@ productName: SOS DIGITAL
 directories:
   output: dist
   buildResources: build
+afterPack: "./build/afterPack.js"
 files:
   - "src/**/*"
   - "package.json"
