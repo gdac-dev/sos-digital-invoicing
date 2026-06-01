@@ -50,7 +50,7 @@ export default function InvoiceDetail() {
   };
 
   if (loading) return <div className="loader"><div className="loader-dot"/><div className="loader-dot"/><div className="loader-dot"/></div>;
-  if (!invoice) return <div className="empty-state"><h3>Facture introuvable</h3></div>;
+  if (!invoice) return <div className="empty-state"><h3>{lang === 'fr' ? 'Facture introuvable' : 'Invoice not found'}</h3></div>;
 
   const paidAmount = invoice.payments?.reduce((s, p) => s + p.amount, 0) || 0;
   const remaining = invoice.total - paidAmount;

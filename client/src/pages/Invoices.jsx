@@ -31,7 +31,7 @@ export default function Invoices() {
     e.stopPropagation();
     if (!confirm(t.invoice.confirmDelete)) return;
     await api.delete(`/invoices/${id}`);
-    toast.success('Facture supprimée');
+    toast.success(lang === 'fr' ? 'Facture supprimée' : 'Invoice deleted');
     load();
   };
 

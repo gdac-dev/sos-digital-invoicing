@@ -16,9 +16,9 @@ export default function Payments() {
   const handleExport = () => {
     const data = payments.map(p => ({
       Date: formatDate(p.date),
-      Facture: p.invoice?.number,
-      Client: p.invoice?.client?.name,
-      Montant: p.amount,
+      [lang === 'fr' ? 'Facture' : 'Invoice']: p.invoice?.number,
+      [lang === 'fr' ? 'Client' : 'Client']: p.invoice?.client?.name,
+      [lang === 'fr' ? 'Montant' : 'Amount']: p.amount,
       Devise: 'FCFA',
       Methode: p.method,
       Notes: p.notes || '',
