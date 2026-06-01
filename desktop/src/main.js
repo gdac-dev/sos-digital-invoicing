@@ -200,7 +200,7 @@ function startBackend() {
     const checkReady = () => {
       attempts++;
       const http = require('http');
-      const req = http.get(`http://localhost:${PORT}/api/health`, (res) => {
+      const req = http.get(`http://127.0.0.1:${PORT}/api/health`, (res) => {
         if (res.statusCode === 200) {
           console.log('Backend server is ready!');
           resolve(true);

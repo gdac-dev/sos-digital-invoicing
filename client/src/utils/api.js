@@ -5,7 +5,7 @@ let baseURL = import.meta.env.VITE_API_URL
   : '/api';
 
 if (window.electronAPI) {
-  baseURL = 'http://localhost:3001/api';
+  baseURL = 'http://127.0.0.1:3001/api';
 }
 
 const api = axios.create({ baseURL });
