@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, shell, Notification, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { pathToFileURL } = require('url');
+const { spawn } = require('child_process');
 let store;
 
 async function initStore() {
@@ -18,16 +18,22 @@ async function initStore() {
 
 let mainWindow;
 let tray;
+let serverProcess;
 
 const IS_DEV = !app.isPackaged;
 const PORT = 3001;
 
-// Log file for debugging server issues
-const logFile = path.join(app.getPath('userData'), 'server.log');
+// Guaranteed writable log path (use OS temp directory which always exists)
+function getLogPath() {
+  const tmpDir = require('os').tmpdir();
+  return path.join(tmpDir, 'sos-digital-server.log');
+}
+
 function logToFile(msg) {
-  const timestamp = new Date().toISOString();
-  const line = `[${timestamp}] ${msg}\n`;
-  try { fs.appendFileSync(logFile, line); } catch {}
+  try {
+    const line = `[${new Date().toISOString()}] ${msg}\n`;
+    fs.appendFileSync(getLogPath(), line);
+  } catch {}
 }
 
 function createWindow() {
@@ -70,109 +76,159 @@ function setupMenu() {
         { role: 'quit', label: 'Quitter' }
       ]
     },
-    {
-      label: 'Factures',
-      click: () => mainWindow.webContents.send('navigate', '/invoices')
-    },
-    {
-      label: 'Paiements',
-      click: () => mainWindow.webContents.send('navigate', '/payments')
-    },
-    {
-      label: 'Clients',
-      click: () => mainWindow.webContents.send('navigate', '/clients')
-    },
-    {
-      label: 'Rapports',
-      click: () => mainWindow.webContents.send('navigate', '/reports')
-    },
-    {
-      label: 'Tableau de bord',
-      click: () => mainWindow.webContents.send('navigate', '/')
-    },
+    { label: 'Factures', click: () => mainWindow.webContents.send('navigate', '/invoices') },
+    { label: 'Paiements', click: () => mainWindow.webContents.send('navigate', '/payments') },
+    { label: 'Clients', click: () => mainWindow.webContents.send('navigate', '/clients') },
+    { label: 'Rapports', click: () => mainWindow.webContents.send('navigate', '/reports') },
+    { label: 'Tableau de bord', click: () => mainWindow.webContents.send('navigate', '/') },
     {
       label: 'Aide',
       submenu: [
         { label: 'Documentation', click: () => shell.openExternal('https://sosdigital.cm/support') },
+        { label: 'Voir les logs', click: () => shell.openPath(getLogPath()) },
         { type: 'separator' },
         { role: 'toggleDevTools' }
       ]
     }
   ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 function setupTray() {
   tray = new Tray(path.join(__dirname, '../build/icon.png'));
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Ouvrir', click: () => mainWindow.show() },
-    { label: 'Nouvelle Facture', click: () => {
-        mainWindow.show();
-        mainWindow.webContents.send('navigate', '/invoices/new');
-    }},
+    { label: 'Nouvelle Facture', click: () => { mainWindow.show(); mainWindow.webContents.send('navigate', '/invoices/new'); }},
     { type: 'separator' },
     { label: 'Quitter', click: () => app.quit() }
   ]);
   tray.setToolTip('SOS DIGITAL Invoicing');
   tray.setContextMenu(contextMenu);
-  
   tray.on('click', () => mainWindow.show());
 }
 
-async function startBackend() {
-  const serverDir = IS_DEV 
-    ? path.join(__dirname, '../../server') 
-    : path.join(process.resourcesPath, 'server');
+function startBackend() {
+  return new Promise((resolve) => {
+    const serverDir = IS_DEV
+      ? path.join(__dirname, '../../server')
+      : path.join(process.resourcesPath, 'server');
 
-  // SQLite database in user's app data directory (persists across updates)
-  const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
-  const dbUrl = `file:${dbPath}`;
+    // Build a proper SQLite URL with forward slashes for Windows compatibility
+    const userDataDir = app.getPath('userData');
+    const dbPath = path.join(userDataDir, 'database.sqlite');
+    // Prisma SQLite needs forward slashes on Windows
+    const dbUrl = 'file:' + dbPath.replace(/\\/g, '/');
 
-  logToFile('Server dir: ' + serverDir);
-  logToFile('DB path: ' + dbPath);
+    logToFile('=== STARTING BACKEND ===');
+    logToFile('IS_DEV: ' + IS_DEV);
+    logToFile('serverDir: ' + serverDir);
+    logToFile('dbPath: ' + dbPath);
+    logToFile('dbUrl: ' + dbUrl);
+    logToFile('execPath: ' + process.execPath);
 
-  // Copy template database on first run
-  if (!fs.existsSync(dbPath)) {
-    const templatePath = path.join(serverDir, 'prisma', 'template.db');
-    logToFile('Template DB path: ' + templatePath);
-    if (fs.existsSync(templatePath)) {
-      logToFile('Copying template database...');
-      fs.copyFileSync(templatePath, dbPath);
-      logToFile('Template database copied successfully.');
-    } else {
-      logToFile('ERROR: Template database not found at: ' + templatePath);
+    // Copy template database on first run
+    if (!fs.existsSync(dbPath)) {
+      const templatePath = path.join(serverDir, 'prisma', 'template.db');
+      logToFile('Template path: ' + templatePath);
+      logToFile('Template exists: ' + fs.existsSync(templatePath));
+      if (fs.existsSync(templatePath)) {
+        fs.copyFileSync(templatePath, dbPath);
+        logToFile('Template DB copied successfully');
+      } else {
+        logToFile('ERROR: template.db not found!');
+      }
     }
-  } else {
-    logToFile('Database already exists at: ' + dbPath);
-  }
 
-  // Set ALL environment variables BEFORE importing the server module
-  // (dotenv.config() won't override env vars that already exist)
-  process.env.DATABASE_URL = dbUrl;
-  process.env.PORT = String(PORT);
-  process.env.NODE_ENV = IS_DEV ? 'development' : 'production';
-  process.env.JWT_SECRET = 'local-desktop-secret-sos-digital-2024';
-  process.env.JWT_EXPIRES_IN = '30d';
-  process.env.CLIENT_URL = '*';
-  process.env.ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@sosdigital.cm';
-  process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@SOS2024';
-  process.env.ADMIN_NAME = process.env.ADMIN_NAME || 'Administrateur SOS';
+    // Use start.cjs (CommonJS bootstrap) to load the ESM server
+    const serverEntry = path.join(serverDir, 'src', 'start.cjs');
+    logToFile('Server entry: ' + serverEntry);
+    logToFile('Entry exists: ' + fs.existsSync(serverEntry));
 
-  try {
-    // Import the ESM server module directly into this process
-    const serverEntry = pathToFileURL(path.join(serverDir, 'src', 'index.js')).href;
-    logToFile('Importing server module: ' + serverEntry);
-    await import(serverEntry);
-    logToFile('Backend server started successfully in-process!');
-    return true;
-  } catch (err) {
-    logToFile('FATAL: Failed to start backend: ' + err.message);
-    logToFile(err.stack);
-    console.error('Failed to start backend:', err);
-    return false;
-  }
+    const serverEnv = {
+      ...process.env,
+      DATABASE_URL: dbUrl,
+      PORT: String(PORT),
+      NODE_ENV: IS_DEV ? 'development' : 'production',
+      JWT_SECRET: 'local-desktop-secret-sos-digital-2024',
+      JWT_EXPIRES_IN: '30d',
+      CLIENT_URL: '*',
+      ADMIN_EMAIL: 'admin@sosdigital.cm',
+      ADMIN_PASSWORD: 'Admin@SOS2024',
+      ADMIN_NAME: 'Administrateur SOS',
+      ELECTRON_RUN_AS_NODE: '1'
+    };
+
+    serverProcess = spawn(process.execPath, [serverEntry], {
+      cwd: serverDir,
+      env: serverEnv,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
+    });
+
+    let serverOutput = '';
+
+    serverProcess.stdout.on('data', (data) => {
+      const msg = data.toString().trim();
+      logToFile('[SERVER OUT] ' + msg);
+      serverOutput += msg + '\n';
+    });
+
+    serverProcess.stderr.on('data', (data) => {
+      const msg = data.toString().trim();
+      logToFile('[SERVER ERR] ' + msg);
+      serverOutput += 'ERR: ' + msg + '\n';
+    });
+
+    serverProcess.on('error', (err) => {
+      logToFile('[SPAWN ERROR] ' + err.message);
+      resolve(false);
+    });
+
+    serverProcess.on('exit', (code) => {
+      logToFile('[SERVER EXIT] code=' + code);
+      if (code !== null && code !== 0) {
+        // Server crashed - show a dialog so the user can report the issue
+        dialog.showMessageBox({
+          type: 'error',
+          title: 'Erreur serveur SOS DIGITAL',
+          message: 'Le serveur interne a échoué au démarrage.',
+          detail: 'Log: ' + getLogPath() + '\n\n' + serverOutput.slice(-500),
+          buttons: ['OK']
+        }).catch(() => {});
+      }
+    });
+
+    // Poll the health endpoint to check if server is ready
+    let attempts = 0;
+    const maxAttempts = 30; // 15 seconds max wait
+    const checkReady = () => {
+      attempts++;
+      logToFile('Health check attempt ' + attempts);
+      const http = require('http');
+      const req = http.get(`http://127.0.0.1:${PORT}/api/health`, (res) => {
+        if (res.statusCode === 200) {
+          logToFile('Server is READY!');
+          resolve(true);
+        } else if (attempts < maxAttempts) {
+          setTimeout(checkReady, 500);
+        } else {
+          logToFile('Health check: max attempts reached (non-200)');
+          resolve(false);
+        }
+      });
+      req.on('error', (err) => {
+        logToFile('Health check error: ' + err.message);
+        if (attempts < maxAttempts) {
+          setTimeout(checkReady, 500);
+        } else {
+          logToFile('Health check: max attempts reached (connect error)');
+          resolve(false);
+        }
+      });
+      req.setTimeout(2000);
+    };
+    setTimeout(checkReady, 2000);
+  });
 }
 
 // Single instance lock
@@ -189,35 +245,47 @@ app.on('second-instance', () => {
 
 app.whenReady().then(async () => {
   await initStore();
-  
-  logToFile('=== SOS DIGITAL starting ===');
-  logToFile('Is dev: ' + IS_DEV);
+
+  logToFile('=== SOS DIGITAL APP STARTING ===');
+  logToFile('App version: ' + app.getVersion());
+  logToFile('Electron: ' + process.versions.electron);
+  logToFile('Node: ' + process.versions.node);
   logToFile('userData: ' + app.getPath('userData'));
-  
-  // Start the backend server in-process
+  logToFile('Log file: ' + getLogPath());
+
   const backendStarted = await startBackend();
   logToFile('Backend started: ' + backendStarted);
-  
+
   createWindow();
-  try { setupTray(); } catch(e){ logToFile('Tray setup error: ' + e.message); }
+  try { setupTray(); } catch (e) { logToFile('Tray error: ' + e.message); }
+
+  if (!backendStarted) {
+    logToFile('Backend failed - showing error dialog');
+    dialog.showMessageBox({
+      type: 'warning',
+      title: 'SOS DIGITAL',
+      message: 'Le serveur interne n\'a pas pu démarrer.',
+      detail: 'Consultez le fichier de log:\n' + getLogPath(),
+      buttons: ['OK']
+    }).catch(() => {});
+  }
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+app.on('will-quit', () => {
+  if (serverProcess) {
+    logToFile('Killing server process');
+    serverProcess.kill();
+  }
+});
+
 // === IPC Handlers ===
-
 ipcMain.handle('get-config', (e, key) => store.get(key));
-
-ipcMain.handle('set-config', async (e, key, value) => {
-  store.set(key, value);
-  return true;
-});
-
-ipcMain.handle('show-notification', (e, title, body) => {
-  new Notification({ title, body }).show();
-});
+ipcMain.handle('set-config', async (e, key, value) => { store.set(key, value); return true; });
+ipcMain.handle('show-notification', (e, title, body) => { new Notification({ title, body }).show(); });
 
 ipcMain.handle('save-pdf', async (e, defaultPath, buffer) => {
   const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
