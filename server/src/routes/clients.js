@@ -12,9 +12,9 @@ router.get('/', async (req, res) => {
     const where = { userId: req.user.id };
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { company: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { company: { contains: search } },
+        { email: { contains: search } },
       ];
     }
     if (status) where.status = status;

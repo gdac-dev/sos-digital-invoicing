@@ -50,8 +50,10 @@ async function ensureAdminUser() {
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: (origin, cb) => {
+    // Allow requests with no origin (same-origin, file://, mobile apps, curl, etc.)
+    if (!origin || origin === 'null') return cb(null, true);
     const allowed = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(u => u.trim());
-    if (!origin || allowed.includes(origin) || allowed.includes('*')) return cb(null, true);
+    if (allowed.includes(origin) || allowed.includes('*')) return cb(null, true);
     cb(new Error('CORS not allowed'));
   },
   credentials: true,
@@ -89,7 +91,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', async () => {
+app.listen(PORT, '127.0.0.1', async () => {
   console.log(`🚀 SOS DIGITAL API running on port ${PORT}`);
   await ensureAdminUser();
   await startReminderCron();

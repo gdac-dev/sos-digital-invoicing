@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
   try {
     const { search, category } = req.query;
     const where = { isActive: true, userId: req.user.id };
-    if (search) where.name = { contains: search, mode: 'insensitive' };
+    if (search) where.name = { contains: search };
     if (category) where.category = category;
     const items = await prisma.catalogItem.findMany({ where, orderBy: { name: 'asc' } });
     res.json(items);

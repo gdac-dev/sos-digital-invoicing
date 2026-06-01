@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, shell, Notification, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { pathToFileURL } = require('url');
 let store;
 
 async function initStore() {
@@ -9,7 +10,6 @@ async function initStore() {
   store = new Store({
     encryptionKey: 'sos-digital-secure-key',
     defaults: {
-      dbUrl: '',
       language: 'fr',
       theme: 'light'
     }
@@ -17,12 +17,18 @@ async function initStore() {
 }
 
 let mainWindow;
-let settingsWindow;
 let tray;
-let serverProcess;
 
 const IS_DEV = !app.isPackaged;
 const PORT = 3001;
+
+// Log file for debugging server issues
+const logFile = path.join(app.getPath('userData'), 'server.log');
+function logToFile(msg) {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${msg}\n`;
+  try { fs.appendFileSync(logFile, line); } catch {}
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -48,36 +54,11 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     const clientPath = path.join(process.resourcesPath, 'client', 'dist', 'index.html');
-    console.log('Loading client from:', clientPath);
+    logToFile('Loading client from: ' + clientPath);
     mainWindow.loadFile(clientPath);
   }
 
   setupMenu();
-}
-
-function openSettings() {
-  if (settingsWindow) {
-    settingsWindow.focus();
-    return;
-  }
-
-  settingsWindow = new BrowserWindow({
-    width: 600,
-    height: 500,
-    title: 'Paramètres - SOS DIGITAL',
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  settingsWindow.loadFile(path.join(__dirname, 'settings', 'settings.html'));
-
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
 }
 
 function setupMenu() {
@@ -85,7 +66,6 @@ function setupMenu() {
     {
       label: 'Fichier',
       submenu: [
-        { label: 'Paramètres...', click: openSettings },
         { type: 'separator' },
         { role: 'quit', label: 'Quitter' }
       ]
@@ -125,7 +105,7 @@ function setupMenu() {
 }
 
 function setupTray() {
-  tray = new Tray(path.join(__dirname, '../build/icon.png')); // We will provide an icon later
+  tray = new Tray(path.join(__dirname, '../build/icon.png'));
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Ouvrir', click: () => mainWindow.show() },
     { label: 'Nouvelle Facture', click: () => {
@@ -141,105 +121,66 @@ function setupTray() {
   tray.on('click', () => mainWindow.show());
 }
 
-const { spawn } = require('child_process');
+async function startBackend() {
+  const serverDir = IS_DEV 
+    ? path.join(__dirname, '../../server') 
+    : path.join(process.resourcesPath, 'server');
 
-function startBackend() {
-  return new Promise((resolve, reject) => {
-    // Use local SQLite database in the userData directory
-    const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
-    const dbUrl = `file:${dbPath}`;
+  // SQLite database in user's app data directory (persists across updates)
+  const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
+  const dbUrl = `file:${dbPath}`;
 
-    const serverDir = IS_DEV 
-      ? path.join(__dirname, '../../server') 
-      : path.join(process.resourcesPath, 'server');
+  logToFile('Server dir: ' + serverDir);
+  logToFile('DB path: ' + dbPath);
 
-    // If database doesn't exist, copy from template
-    if (!fs.existsSync(dbPath)) {
-      const templatePath = path.join(serverDir, 'prisma', 'template.db');
-      if (fs.existsSync(templatePath)) {
-        console.log('Copying SQLite template database to:', dbPath);
-        fs.copyFileSync(templatePath, dbPath);
-      } else {
-        console.warn('Template DB not found at:', templatePath, '- Prisma will create an empty one (but tables will be missing)');
-      }
+  // Copy template database on first run
+  if (!fs.existsSync(dbPath)) {
+    const templatePath = path.join(serverDir, 'prisma', 'template.db');
+    logToFile('Template DB path: ' + templatePath);
+    if (fs.existsSync(templatePath)) {
+      logToFile('Copying template database...');
+      fs.copyFileSync(templatePath, dbPath);
+      logToFile('Template database copied successfully.');
+    } else {
+      logToFile('ERROR: Template database not found at: ' + templatePath);
     }
+  } else {
+    logToFile('Database already exists at: ' + dbPath);
+  }
 
-    const serverEntry = path.join(serverDir, 'src', 'index.js');
-    
-    console.log('Starting backend server...');
-    console.log('  Server dir:', serverDir);
-    console.log('  DB Path:', dbPath);
-    
-    const serverEnv = {
-      ...process.env,
-      DATABASE_URL: dbUrl,
-      PORT: String(PORT),
-      NODE_ENV: IS_DEV ? 'development' : 'production',
-      JWT_SECRET: 'local-desktop-secret-sos-digital',
-      CLIENT_URL: `http://localhost:5173,file://`,
-      ELECTRON_RUN_AS_NODE: '1'
-    };
+  // Set ALL environment variables BEFORE importing the server module
+  // (dotenv.config() won't override env vars that already exist)
+  process.env.DATABASE_URL = dbUrl;
+  process.env.PORT = String(PORT);
+  process.env.NODE_ENV = IS_DEV ? 'development' : 'production';
+  process.env.JWT_SECRET = 'local-desktop-secret-sos-digital-2024';
+  process.env.JWT_EXPIRES_IN = '30d';
+  process.env.CLIENT_URL = '*';
+  process.env.ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@sosdigital.cm';
+  process.env.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@SOS2024';
+  process.env.ADMIN_NAME = process.env.ADMIN_NAME || 'Administrateur SOS';
 
-    serverProcess = spawn(process.execPath, [serverEntry], {
-      cwd: serverDir,
-      env: serverEnv,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true
-    });
-
-    serverProcess.stdout.on('data', (data) => {
-      console.log('[SERVER]', data.toString().trim());
-    });
-
-    serverProcess.stderr.on('data', (data) => {
-      console.error('[SERVER ERR]', data.toString().trim());
-    });
-
-    serverProcess.on('error', (err) => {
-      console.error('Backend process spawn error:', err);
-    });
-
-    serverProcess.on('exit', (code) => {
-      console.log('Backend process exited with code:', code);
-    });
-
-    // Wait for server to be ready by polling the health endpoint
-    let attempts = 0;
-    const maxAttempts = 20;
-    const checkReady = () => {
-      attempts++;
-      const http = require('http');
-      const req = http.get(`http://127.0.0.1:${PORT}/api/health`, (res) => {
-        if (res.statusCode === 200) {
-          console.log('Backend server is ready!');
-          resolve(true);
-        } else if (attempts < maxAttempts) {
-          setTimeout(checkReady, 500);
-        } else {
-          console.warn('Backend did not respond OK, proceeding anyway');
-          resolve(true);
-        }
-      });
-      req.on('error', () => {
-        if (attempts < maxAttempts) {
-          setTimeout(checkReady, 500);
-        } else {
-          console.warn('Backend health check timed out, proceeding anyway');
-          resolve(true);
-        }
-      });
-      req.setTimeout(1000);
-    };
-    setTimeout(checkReady, 1500);
-  });
+  try {
+    // Import the ESM server module directly into this process
+    const serverEntry = pathToFileURL(path.join(serverDir, 'src', 'index.js')).href;
+    logToFile('Importing server module: ' + serverEntry);
+    await import(serverEntry);
+    logToFile('Backend server started successfully in-process!');
+    return true;
+  } catch (err) {
+    logToFile('FATAL: Failed to start backend: ' + err.message);
+    logToFile(err.stack);
+    console.error('Failed to start backend:', err);
+    return false;
+  }
 }
 
-// Deep links (whatsapp:// is handled externally, but we can register sosdigital://)
+// Single instance lock
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 }
 
-app.on('second-instance', (event, commandLine, workingDirectory) => {
+app.on('second-instance', () => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
@@ -249,27 +190,20 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 app.whenReady().then(async () => {
   await initStore();
   
-  // Try to start backend first
+  logToFile('=== SOS DIGITAL starting ===');
+  logToFile('Is dev: ' + IS_DEV);
+  logToFile('userData: ' + app.getPath('userData'));
+  
+  // Start the backend server in-process
   const backendStarted = await startBackend();
+  logToFile('Backend started: ' + backendStarted);
   
   createWindow();
-  // Don't crash if no icon exists yet, ignore errors on tray setup if missing image
-  try { setupTray(); } catch(e){}
-
-  if (!backendStarted) {
-    // If backend couldn't start (no DB config), force open settings
-    openSettings();
-  }
+  try { setupTray(); } catch(e){ logToFile('Tray setup error: ' + e.message); }
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('will-quit', () => {
-  if (serverProcess) {
-    serverProcess.kill();
-  }
 });
 
 // === IPC Handlers ===
@@ -278,15 +212,6 @@ ipcMain.handle('get-config', (e, key) => store.get(key));
 
 ipcMain.handle('set-config', async (e, key, value) => {
   store.set(key, value);
-  if (key === 'dbUrl') {
-    // Restart backend when DB URL changes
-    if (serverProcess) serverProcess.kill();
-    const started = await startBackend();
-    if (started && mainWindow) {
-      mainWindow.reload(); // Reload UI to reconnect
-    }
-    return started;
-  }
   return true;
 });
 
@@ -307,7 +232,6 @@ ipcMain.handle('save-pdf', async (e, defaultPath, buffer) => {
 });
 
 ipcMain.handle('open-external', (e, url) => {
-  // If it's WhatsApp, force whatsapp:// if specified, but usually it comes as https://wa.me/...
   if (url.includes('wa.me')) {
     const phone = url.split('wa.me/')[1];
     shell.openExternal(`whatsapp://send?phone=${phone}`);
