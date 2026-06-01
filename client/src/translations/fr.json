@@ -9,7 +9,11 @@
   "auth": {
     "login": "Connexion", "email": "Adresse email", "password": "Mot de passe",
     "loginBtn": "Se connecter", "loginError": "Identifiants invalides",
-    "welcome": "Bienvenue", "loginSubtitle": "Connectez-vous à votre espace"
+    "welcome": "Bienvenue", "loginSubtitle": "Connectez-vous à votre espace",
+    "register": "S'inscrire", "registerBtn": "Créer mon compte",
+    "registerSuccess": "Compte créé avec succès", "registerError": "Erreur lors de l'inscription",
+    "confirmPassword": "Confirmer le mot de passe", "name": "Nom complet",
+    "hasAccount": "Vous avez déjà un compte ?", "noAccount": "Pas encore de compte ?"
   },
   "dashboard": {
     "title": "Tableau de bord", "totalRevenue": "Revenus totaux",
@@ -23,7 +27,7 @@
     "title": "Factures", "new": "Nouvelle facture", "number": "Numéro",
     "client": "Client", "date": "Date", "dueDate": "Échéance",
     "amount": "Montant", "status": "Statut", "actions": "Actions",
-    "template": "Modèle", "classic": "Classique Professionnel", "modern": "Moderne Minimaliste",
+    "template": "Modèle", "classic": "Classique Professionnel", "modern": "Moderne Minimaliste", "elegant": "Élégant", "minimalist": "Minimaliste", "corporate": "Corporate Orange",
     "preview": "Aperçu", "export": "Exporter PDF", "send": "Envoyer",
     "whatsapp": "Partager WhatsApp", "language": "Langue du document",
     "subtotal": "Sous-total", "tax": "TVA", "discount": "Remise",

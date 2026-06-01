@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const { search, status, page = 1, limit = 20 } = req.query;
-    const where = {};
+    const where = { userId: req.user.id };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const client = await prisma.client.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       include: {
         invoices: { orderBy: { createdAt: 'desc' }, take: 10 },
         quotes: { orderBy: { createdAt: 'desc' }, take: 5 },
@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
     const { name, company, email, phone, address, city, country, taxId, status, notes } = req.body;
     if (!name) return res.status(400).json({ error: 'Le nom est requis' });
     const client = await prisma.client.create({
-      data: { name, company, email, phone, address, city, country: country || 'Cameroun', taxId, status: status || 'active', notes },
+      data: { userId: req.user.id, name, company, email, phone, address, city, country: country || 'Cameroun', taxId, status: status || 'active', notes },
     });
     res.status(201).json(client);
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
@@ -64,7 +64,7 @@ router.patch('/:id', async (req, res) => {
   try {
     const { name, company, email, phone, address, city, country, taxId, status, notes } = req.body;
     const client = await prisma.client.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       data: { name, company, email, phone, address, city, country, taxId, status, notes },
     });
     res.json(client);
@@ -74,7 +74,7 @@ router.patch('/:id', async (req, res) => {
 // DELETE /api/clients/:id
 router.delete('/:id', async (req, res) => {
   try {
-    await prisma.client.delete({ where: { id: req.params.id } });
+    await prisma.client.delete({ where: { id: req.params.id, userId: req.user.id } });
     res.json({ message: 'Client supprimé' });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });

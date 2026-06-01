@@ -9,7 +9,11 @@
   "auth": {
     "login": "Login", "email": "Email address", "password": "Password",
     "loginBtn": "Sign in", "loginError": "Invalid credentials",
-    "welcome": "Welcome back", "loginSubtitle": "Sign in to your workspace"
+    "welcome": "Welcome back", "loginSubtitle": "Sign in to your workspace",
+    "register": "Register", "registerBtn": "Create account",
+    "registerSuccess": "Account created successfully", "registerError": "Error creating account",
+    "confirmPassword": "Confirm password", "name": "Full Name",
+    "hasAccount": "Already have an account?", "noAccount": "Don't have an account yet?"
   },
   "dashboard": {
     "title": "Dashboard", "totalRevenue": "Total Revenue",
@@ -23,7 +27,7 @@
     "title": "Invoices", "new": "New Invoice", "number": "Number",
     "client": "Client", "date": "Date", "dueDate": "Due Date",
     "amount": "Amount", "status": "Status", "actions": "Actions",
-    "template": "Template", "classic": "Classic Professional", "modern": "Modern Minimalist",
+    "template": "Template", "classic": "Classic Professional", "modern": "Modern Minimalist", "elegant": "Elegant", "minimalist": "Minimalist", "corporate": "Corporate Orange",
     "preview": "Preview", "export": "Export PDF", "send": "Send",
     "whatsapp": "Share WhatsApp", "language": "Document Language",
     "subtotal": "Subtotal", "tax": "VAT", "discount": "Discount",

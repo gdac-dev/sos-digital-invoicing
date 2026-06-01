@@ -29,11 +29,6 @@ function AdminRoute({ children }) {
   return user?.role === 'admin' ? children : <Navigate to="/" replace />;
 }
 
-function CanViewRoute({ children }) {
-  const { user } = useAuth();
-  return user?.canViewData !== false ? children : <Navigate to="/invoices" replace />;
-}
-
 const Router = window.electronAPI ? HashRouter : BrowserRouter;
 
 function NavigationListener() {
@@ -55,7 +50,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-          <Route index element={<CanViewRoute><Dashboard /></CanViewRoute>} />
+          <Route index element={<Dashboard />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="invoices/new" element={<InvoiceEditor />} />
           <Route path="invoices/:id/edit" element={<InvoiceEditor />} />
@@ -64,8 +59,8 @@ function App() {
           <Route path="clients" element={<CRM />} />
           <Route path="catalog" element={<Catalog />} />
           <Route path="payments" element={<Payments />} />
-          <Route path="reports" element={<CanViewRoute><Reports /></CanViewRoute>} />
-          <Route path="settings" element={<AdminRoute><Settings /></AdminRoute>} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

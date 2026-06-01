@@ -116,8 +116,10 @@ export default function InvoicePreview({ company, client, details, sections, ext
 
   // Template header style
   const isModern = design.template === 'modern';
-  const isMinimal = design.template === 'minimal';
+  const isMinimal = design.template === 'minimal' || design.template === 'minimalist';
   const isClassic = design.template === 'classic';
+  const isCorporate = design.template === 'corporate';
+  const isElegant = design.template === 'elegant';
 
   return (
     <div
@@ -151,7 +153,30 @@ export default function InvoicePreview({ company, client, details, sections, ext
       )}
 
       {/* ===== HEADER ===== */}
-      {isModern ? (
+      {isCorporate ? (
+        <div style={{ paddingBottom: 16 }}>
+          <div style={{ height: 16, background: palette.primary }} />
+          <div style={{ padding: '28px 32px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {company.logo && <img src={company.logo} alt="Logo" style={{ width: 64, height: 64, objectFit: 'contain' }} onError={e => e.target.style.display='none'} />}
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 24, color: palette.dark, textTransform: 'uppercase', letterSpacing: '-0.5px' }}>{company.name}</div>
+                <div style={{ fontSize: 9, color: palette.primary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginTop: 2 }}>{company.activity}</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: 900, fontSize: 32, color: palette.primary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>{displayTitle}</div>
+              <div style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>
+                {t.no} <span style={{ color: palette.dark }}>{details.number || `${new Date().getFullYear()}-XXXX`}</span>
+              </div>
+              <div style={{ fontSize: 9, color: '#64748b', marginTop: 2 }}>
+                {t.date} : {details.date ? new Date(details.date).toLocaleDateString(locale) : '—'}
+              </div>
+            </div>
+          </div>
+          <div style={{ margin: '0 32px', borderBottom: `2px solid #f1f5f9` }} />
+        </div>
+      ) : isModern ? (
         <div style={{ background: palette.primary, padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {company.logo && <img src={company.logo} alt="Logo" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.4)' }} onError={e => e.target.style.display='none'} />}
@@ -178,8 +203,26 @@ export default function InvoicePreview({ company, client, details, sections, ext
             </div>
           </div>
         </div>
+      ) : isElegant ? (
+        <div style={{ padding: '32px 36px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid #e2e8f0` }}>
+          <div>
+            <div style={{ fontWeight: 300, fontSize: 32, color: palette.primary, letterSpacing: '2px', textTransform: 'uppercase' }}>{displayTitle}</div>
+            <div style={{ fontSize: 9, color: '#475569', marginTop: 8, letterSpacing: '0.5px' }}>{t.no} <strong style={{color: palette.dark}}>{details.number || `${new Date().getFullYear()}-XXXX`}</strong></div>
+            <div style={{ fontSize: 9, color: '#475569', marginTop: 2, letterSpacing: '0.5px' }}>{t.date} : {details.date ? new Date(details.date).toLocaleDateString(locale) : '—'}</div>
+            {details.validity && <div style={{ fontSize: 9, color: '#475569', marginTop: 2 }}>{t.validity} : {details.validity} {t.days}</div>}
+            {details.dueDate && <div style={{ fontSize: 9, color: '#ef4444', fontWeight: 600, marginTop: 2 }}>{t.dueDate} : {new Date(details.dueDate).toLocaleDateString(locale)}</div>}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', textAlign: 'right' }}>
+            {company.logo && <img src={company.logo} alt="Logo" style={{ width: 72, height: 72, objectFit: 'contain', marginBottom: 12 }} onError={e => e.target.style.display='none'} />}
+            <div style={{ fontWeight: 700, fontSize: 14, color: palette.dark, letterSpacing: '1px' }}>{company.name}</div>
+            <div style={{ fontSize: 8.5, color: '#64748b', marginTop: 2 }}>{company.activity}</div>
+            <div style={{ fontSize: 8, color: '#64748b', marginTop: 4 }}>{company.address}{company.city ? `, ${company.city}` : ''}</div>
+            <div style={{ fontSize: 8, color: '#64748b' }}>{company.phone} · {company.email}</div>
+            {company.taxId && <div style={{ fontSize: 8, color: '#64748b' }}>{t.taxId} {company.taxId}</div>}
+          </div>
+        </div>
       ) : (
-        // Elegant + Classic
+        // Classic
         <div style={{ padding: '24px 32px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             {company.logo && (
@@ -206,15 +249,15 @@ export default function InvoicePreview({ company, client, details, sections, ext
       )}
 
       {/* Color bar (elegant/classic only) */}
-      {!isModern && !isMinimal && <div style={{ height: 4, background: palette.primary, margin: '0 32px' }} />}
+      {!isModern && !isMinimal && !isCorporate && <div style={{ height: 4, background: palette.primary, margin: '0 32px' }} />}
 
       <div style={{ padding: '14px 32px 28px' }}>
         {/* Client + Details row */}
         <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
           {/* Client block */}
-          <div style={{ flex: 1, background: palette.accent + '44', borderLeft: `3px solid ${palette.primary}`, padding: '10px 12px', borderRadius: '0 6px 6px 0' }}>
-            <div style={{ fontSize: 8, fontWeight: 700, color: palette.primary, textTransform: 'uppercase', marginBottom: 4 }}>{t.billedTo}</div>
-            <div style={{ fontWeight: 700, fontSize: 11 }}>{client.name || '...'}</div>
+          <div style={{ flex: 1, background: isCorporate ? '#ffffff' : palette.accent + '44', borderLeft: `3px solid ${palette.primary}`, padding: '12px 16px', borderRadius: isCorporate ? 8 : '0 6px 6px 0', boxShadow: isCorporate ? '0 4px 20px rgba(0,0,0,0.05)' : 'none', border: isCorporate ? '1px solid #f1f5f9' : 'none' }}>
+            <div style={{ fontSize: 8, fontWeight: 800, color: palette.primary, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.5px' }}>{t.billedTo}</div>
+            <div style={{ fontWeight: 800, fontSize: 12, color: palette.dark, marginBottom: 4 }}>{client.name || '...'}</div>
             {client.address && <div style={{ fontSize: 9, color: '#475569' }}>{client.address}</div>}
             {client.city && <div style={{ fontSize: 9, color: '#475569' }}>{client.city}</div>}
             {client.phone && <div style={{ fontSize: 9, color: '#475569' }}>{client.phone}</div>}
@@ -231,7 +274,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
 
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
           <thead>
-            <tr style={{ background: palette.dark }}>
+            <tr style={{ background: isCorporate ? palette.primary : palette.dark }}>
               {[t.colNo, t.colDesc, t.colUnit, t.colQty, t.colPrice, t.colTotal].map((h, i) => (
                 <th key={h} style={{ padding: '6px 8px', color: 'white', fontSize: 8.5, fontWeight: 700, textAlign: i <= 1 ? 'left' : 'right', textTransform: 'uppercase' }}>{h}</th>
               ))}

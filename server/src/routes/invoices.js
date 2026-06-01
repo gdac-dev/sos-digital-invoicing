@@ -16,7 +16,7 @@ const generateNumber = async () => {
 router.get('/', async (req, res) => {
   try {
     const { status, clientId, search, page = 1, limit = 20, from, to } = req.query;
-    const where = {};
+    const where = { userId: req.user.id };
     if (status) where.status = status;
     if (clientId) where.clientId = clientId;
     if (from || to) {
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       include: {
         client: true,
         user: { select: { id: true, name: true, email: true } },
@@ -168,7 +168,7 @@ router.patch('/:id', async (req, res) => {
       };
     }
     const invoice = await prisma.invoice.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       data: updateData,
       include: { client: true, items: true, payments: true },
     });
@@ -179,7 +179,7 @@ router.patch('/:id', async (req, res) => {
 // DELETE /api/invoices/:id
 router.delete('/:id', async (req, res) => {
   try {
-    await prisma.invoice.delete({ where: { id: req.params.id } });
+    await prisma.invoice.delete({ where: { id: req.params.id, userId: req.user.id } });
     res.json({ message: 'Facture supprimée' });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });

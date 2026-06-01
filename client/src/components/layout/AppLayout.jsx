@@ -7,6 +7,7 @@ import {
   LayoutDashboard, FileText, Quote, Users, Package,
   CreditCard, BarChart2, Settings, LogOut, Menu, X, Globe
 } from 'lucide-react';
+import logoImg from '../../assets/logo.jpeg';
 
 export default function AppLayout() {
   const { user, logout, isAdmin } = useAuth();
@@ -17,13 +18,13 @@ export default function AppLayout() {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const navItems = [
-    ...(user?.canViewData !== false ? [{ to: '/', icon: LayoutDashboard, label: t.nav.dashboard, end: true }] : []),
+    { to: '/', icon: LayoutDashboard, label: t.nav.dashboard, end: true },
     { to: '/invoices', icon: FileText, label: t.nav.invoices },
     { to: '/quotes', icon: Quote, label: t.nav.quotes },
     { to: '/clients', icon: Users, label: t.nav.clients },
     { to: '/catalog', icon: Package, label: t.nav.catalog },
     { to: '/payments', icon: CreditCard, label: t.nav.payments },
-    ...(user?.canViewData !== false ? [{ to: '/reports', icon: BarChart2, label: t.nav.reports }] : []),
+    { to: '/reports', icon: BarChart2, label: t.nav.reports },
   ];
 
   return (
@@ -34,7 +35,7 @@ export default function AppLayout() {
       {/* Sidebar */}
       <aside className={`sidebar ${sideOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <img src="./logo.jpeg" alt="SOS DIGITAL" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />
+          <img src={logoImg} alt="SOS DIGITAL" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} />
           <div>
             <div className="brand-name">SOS DIGITAL</div>
             <div className="brand-sub">{t.app.subtitle}</div>

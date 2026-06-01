@@ -15,15 +15,15 @@ router.get('/stats', async (req, res) => {
       totalInvoices, paidInvoices, pendingInvoices, overdueInvoices,
       totalRevenue, monthRevenue, totalClients, totalQuotes, convertedQuotes,
     ] = await Promise.all([
-      prisma.invoice.count(),
-      prisma.invoice.count({ where: { status: 'paid' } }),
-      prisma.invoice.count({ where: { status: { in: ['sent', 'viewed'] } } }),
-      prisma.invoice.count({ where: { status: 'overdue' } }),
-      prisma.payment.aggregate({ _sum: { amount: true } }),
-      prisma.payment.aggregate({ _sum: { amount: true }, where: { date: { gte: startOfMonth } } }),
-      prisma.client.count({ where: { status: 'active' } }),
-      prisma.quote.count(),
-      prisma.quote.count({ where: { status: 'converted' } }),
+      prisma.invoice.count({ where: { userId: req.user.id } }),
+      prisma.invoice.count({ where: { userId: req.user.id, status: 'paid' } }),
+      prisma.invoice.count({ where: { userId: req.user.id, status: { in: ['sent', 'viewed'] } } }),
+      prisma.invoice.count({ where: { userId: req.user.id, status: 'overdue' } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { invoice: { userId: req.user.id } } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { invoice: { userId: req.user.id }, date: { gte: startOfMonth } } }),
+      prisma.client.count({ where: { userId: req.user.id, status: 'active' } }),
+      prisma.quote.count({ where: { userId: req.user.id } }),
+      prisma.quote.count({ where: { userId: req.user.id, status: 'converted' } }),
     ]);
 
     res.json({
@@ -50,7 +50,7 @@ router.get('/monthly-revenue', async (req, res) => {
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
       const result = await prisma.payment.aggregate({
         _sum: { amount: true },
-        where: { date: { gte: start, lte: end } },
+        where: { date: { gte: start, lte: end }, invoice: { userId: req.user.id } },
       });
       months.push({
         month: start.toLocaleString('fr-FR', { month: 'short', year: '2-digit' }),
@@ -65,7 +65,7 @@ router.get('/monthly-revenue', async (req, res) => {
 router.get('/top-clients', async (req, res) => {
   try {
     const invoices = await prisma.invoice.findMany({
-      where: { status: 'paid' },
+      where: { status: 'paid', userId: req.user.id },
       include: { client: { select: { id: true, name: true, company: true } } },
     });
     const map = {};
@@ -84,6 +84,7 @@ router.get('/top-clients', async (req, res) => {
 router.get('/recent-invoices', async (req, res) => {
   try {
     const invoices = await prisma.invoice.findMany({
+      where: { userId: req.user.id },
       take: 8,
       orderBy: { createdAt: 'desc' },
       include: { client: { select: { name: true, company: true } } },

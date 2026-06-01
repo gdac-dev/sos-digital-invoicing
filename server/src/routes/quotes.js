@@ -15,7 +15,7 @@ const generateQuoteNumber = async () => {
 router.get('/', async (req, res) => {
   try {
     const { status, clientId, page = 1, limit = 20 } = req.query;
-    const where = {};
+    const where = { userId: req.user.id };
     if (status) where.status = status;
     if (clientId) where.clientId = clientId;
     const [quotes, total] = await Promise.all([
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const quote = await prisma.quote.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       include: { client: true, items: true, user: { select: { id: true, name: true } } },
     });
     if (!quote) return res.status(404).json({ error: 'Devis introuvable' });
@@ -83,7 +83,7 @@ router.post('/', async (req, res) => {
 router.post('/:id/convert', async (req, res) => {
   try {
     const quote = await prisma.quote.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       include: { items: true },
     });
     if (!quote) return res.status(404).json({ error: 'Devis introuvable' });
@@ -148,7 +148,7 @@ router.patch('/:id', async (req, res) => {
     }
 
     const quote = await prisma.quote.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id, userId: req.user.id },
       data: updateData,
     });
     res.json(quote);
@@ -158,7 +158,7 @@ router.patch('/:id', async (req, res) => {
 // DELETE /api/quotes/:id
 router.delete('/:id', async (req, res) => {
   try {
-    await prisma.quote.delete({ where: { id: req.params.id } });
+    await prisma.quote.delete({ where: { id: req.params.id, userId: req.user.id } });
     res.json({ message: 'Devis supprimé' });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });

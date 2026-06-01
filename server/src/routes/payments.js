@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const { invoiceId } = req.query;
-    const where = {};
+    const where = { invoice: { userId: req.user.id } };
     if (invoiceId) where.invoiceId = invoiceId;
     const payments = await prisma.payment.findMany({
       where,
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
     if (!invoiceId || !amount) return res.status(400).json({ error: 'Facture et montant requis' });
 
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId },
+      where: { id: invoiceId, userId: req.user.id },
       include: { payments: true },
     });
     if (!invoice) return res.status(404).json({ error: 'Facture introuvable' });
@@ -60,6 +60,8 @@ router.post('/', async (req, res) => {
 // DELETE /api/payments/:id
 router.delete('/:id', async (req, res) => {
   try {
+    const payment = await prisma.payment.findUnique({ where: { id: req.params.id }, include: { invoice: true } });
+    if (!payment || payment.invoice.userId !== req.user.id) return res.status(404).json({ error: 'Paiement introuvable' });
     await prisma.payment.delete({ where: { id: req.params.id } });
     res.json({ message: 'Paiement supprimé' });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }

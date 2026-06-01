@@ -3,28 +3,60 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Zap } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const { t, lang, toggle } = useLang();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [isRegister, setIsRegister] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [errors, setErrors] = useState({});
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
+    
+    if (isRegister) {
+      if (form.password.length < 6) {
+        const msg = lang === 'fr' ? 'Le mot de passe doit contenir au moins 6 caractères' : 'Password must be at least 6 characters';
+        setErrors({ password: msg });
+        toast.error(msg);
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        setErrors({ confirmPassword: t.auth.registerError || 'Passwords do not match' });
+        toast.error(t.auth.registerError || 'Passwords do not match');
+        return;
+      }
+    }
+    
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      if (isRegister) {
+        await register(form.name, form.email, form.password);
+      } else {
+        await login(form.email, form.password);
+      }
       navigate('/');
-    } catch {
-      toast.error(t.auth.loginError);
+    } catch (err) {
+      // Assuming backend returns error message in err.response.data.error
+      const msg = err.response?.data?.error;
+      if (msg && msg.toLowerCase().includes('email')) {
+        setErrors({ email: msg });
+      } else {
+        setErrors({ form: isRegister ? t.auth.registerError : t.auth.loginError });
+      }
+      toast.error(msg || (isRegister ? t.auth.registerError : t.auth.loginError));
     } finally {
       setLoading(false);
     }
   };
+
+  const getErrorStyle = (field) => errors[field] ? { borderColor: 'var(--danger)', background: '#fef2f2' } : {};
 
   return (
     <div style={{
@@ -55,36 +87,92 @@ export default function Login() {
 
         {/* Card */}
         <div className="card" style={{ padding: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24 }}>{t.auth.welcome}</h2>
+          
+          <div style={{ display: 'flex', marginBottom: 24, gap: 8, background: 'var(--bg-card-hover)', padding: 4, borderRadius: 8 }}>
+            <button
+              type="button"
+              onClick={() => { setIsRegister(false); setErrors({}); }}
+              style={{
+                flex: 1, padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 14,
+                background: !isRegister ? 'var(--primary)' : 'transparent',
+                color: !isRegister ? 'white' : 'var(--text-muted)',
+                border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              {t.auth.login}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsRegister(true); setErrors({}); }}
+              style={{
+                flex: 1, padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 14,
+                background: isRegister ? 'var(--primary)' : 'transparent',
+                color: isRegister ? 'white' : 'var(--text-muted)',
+                border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              {t.auth.register}
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit}>
+            {errors.form && <div style={{ color: 'var(--danger)', fontSize: 13, background: '#fef2f2', padding: '8px 12px', borderRadius: 6, marginBottom: 16, border: '1px solid var(--danger)' }}>{errors.form}</div>}
+            {isRegister && (
+              <div className="form-group">
+                <label className="form-label">{t.auth.name}</label>
+                <input
+                  id="name" type="text" className="form-control" required
+                  placeholder="Jean Dupont"
+                  style={getErrorStyle('name')}
+                  value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(e => ({...e, name: null})); }}
+                />
+                {errors.name && <div style={{ color: 'var(--danger)', fontSize: 11, marginTop: 4 }}>{errors.name}</div>}
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">{t.auth.email}</label>
               <input
                 id="email" type="email" className="form-control" required
                 placeholder="admin@sosdigital.cm"
-                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                style={getErrorStyle('email')}
+                value={form.email} onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErrors(e => ({...e, email: null})); }}
               />
+              {errors.email && <div style={{ color: 'var(--danger)', fontSize: 11, marginTop: 4 }}>{errors.email}</div>}
             </div>
             <div className="form-group">
               <label className="form-label">{t.auth.password}</label>
               <div style={{ position: 'relative' }}>
                 <input
                   id="password" type={showPw ? 'text' : 'password'} className="form-control" required
-                  placeholder="••••••••" style={{ paddingRight: 44 }}
-                  value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="••••••••" style={{ paddingRight: 44, ...getErrorStyle('password') }}
+                  value={form.password} onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setErrors(e => ({...e, password: null})); }}
                 />
                 <button type="button" onClick={() => setShowPw(s => !s)} style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  background: 'transparent', color: 'var(--text-muted)', padding: 4,
+                  background: 'transparent', color: 'var(--text-muted)', padding: 4, border: 'none', cursor: 'pointer'
                 }}>
                   {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
+              {errors.password && <div style={{ color: 'var(--danger)', fontSize: 11, marginTop: 4 }}>{errors.password}</div>}
             </div>
+
+            {isRegister && (
+              <div className="form-group">
+                <label className="form-label">{t.auth.confirmPassword}</label>
+                <input
+                  id="confirmPassword" type="password" className="form-control" required
+                  placeholder="••••••••" style={getErrorStyle('confirmPassword')}
+                  value={form.confirmPassword} onChange={e => { setForm(f => ({ ...f, confirmPassword: e.target.value })); setErrors(e => ({...e, confirmPassword: null})); }}
+                />
+                {errors.confirmPassword && <div style={{ color: 'var(--danger)', fontSize: 11, marginTop: 4 }}>{errors.confirmPassword}</div>}
+              </div>
+            )}
+
             <button id="login-btn" type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 8, padding: '12px', fontSize: 15 }} disabled={loading}>
               {loading ? (
-                <><span className="spin" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%' }} /> {lang === 'fr' ? 'Connexion...' : 'Signing in...'}</>
-              ) : t.auth.loginBtn}
+                <><span className="spin" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%' }} /> {lang === 'fr' ? 'Chargement...' : 'Loading...'}</>
+              ) : (isRegister ? t.auth.registerBtn : t.auth.loginBtn)}
             </button>
           </form>
         </div>

@@ -70,7 +70,9 @@ export default function Settings() {
           <h1 className="page-title">{t.settings.title}</h1>
           <p className="page-subtitle">{lang === 'fr' ? 'Gestion des comptes utilisateurs' : 'User account management'}</p>
         </div>
-        <button className="btn btn-primary" onClick={openCreate}><Plus size={16} />{t.settings.newUser}</button>
+        {me?.email === 'admin@sosdigital.cm' && (
+          <button className="btn btn-primary" onClick={openCreate}><Plus size={16} />{t.settings.newUser}</button>
+        )}
       </div>
 
       {/* Company info card */}
@@ -131,7 +133,7 @@ export default function Settings() {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn-icon" title={t.common.edit} onClick={() => openEdit(u)}><Edit size={13} /></button>
-                      {me?.role === 'admin' && u.id !== me?.id && (
+                      {me?.email === 'admin@sosdigital.cm' && u.id !== me?.id && (
                         <button className="btn-icon" title={lang === 'fr' ? 'Supprimer (Admin)' : 'Delete (Admin)'} onClick={() => handleDeleteUser(u)} style={{ color: 'var(--danger)' }}>
                           <Trash2 size={13} />
                         </button>

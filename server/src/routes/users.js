@@ -6,19 +6,31 @@ import { authenticate, requireAdmin } from '../middleware/auth.js';
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/users — admin only
-router.get('/', requireAdmin, async (req, res) => {
+const isSuperAdmin = (req) => req.user.email === process.env.ADMIN_EMAIL;
+
+// GET /api/users
+router.get('/', async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, canViewData: true, isActive: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(users);
+    if (isSuperAdmin(req)) {
+      const users = await prisma.user.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, email: true, role: true, canViewData: true, isActive: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      res.json(users);
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { id: true, name: true, email: true, role: true, canViewData: true, isActive: true, createdAt: true },
+      });
+      res.json(user && user.isActive ? [user] : []);
+    }
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// POST /api/users — admin only
-router.post('/', requireAdmin, async (req, res) => {
+// POST /api/users — creation via UI is disabled, but if called, restrict to super admin
+router.post('/', async (req, res) => {
+  if (!isSuperAdmin(req)) return res.status(403).json({ error: 'Accès refusé' });
   try {
     const { name, email, password, role, canViewData } = req.body;
     if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis manquants' });
@@ -26,23 +38,27 @@ router.post('/', requireAdmin, async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Email déjà utilisé' });
     const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email: email.toLowerCase(), password: hashed, role: role || 'sales', canViewData: canViewData ?? true },
+      data: { name, email: email.toLowerCase(), password: hashed, role: 'admin', canViewData: true },
       select: { id: true, name: true, email: true, role: true, canViewData: true, isActive: true, createdAt: true },
     });
     res.status(201).json(user);
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// PATCH /api/users/:id — admin only
-router.patch('/:id', requireAdmin, async (req, res) => {
+// PATCH /api/users/:id
+router.patch('/:id', async (req, res) => {
+  if (!isSuperAdmin(req) && req.user.id !== req.params.id) {
+    return res.status(403).json({ error: 'Accès refusé' });
+  }
   try {
     const { name, email, role, canViewData, isActive, password } = req.body;
     const data = {};
     if (name) data.name = name;
     if (email) data.email = email.toLowerCase();
-    if (role) data.role = role;
-    if (canViewData !== undefined) data.canViewData = canViewData;
-    if (isActive !== undefined) data.isActive = isActive;
+    
+    // Only super admin can change active status
+    if (isSuperAdmin(req) && isActive !== undefined) data.isActive = isActive;
+    
     if (password) data.password = await bcrypt.hash(password, 12);
     const user = await prisma.user.update({
       where: { id: req.params.id },
@@ -53,8 +69,9 @@ router.patch('/:id', requireAdmin, async (req, res) => {
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// DELETE /api/users/:id — admin only
-router.delete('/:id', requireAdmin, async (req, res) => {
+// DELETE /api/users/:id
+router.delete('/:id', async (req, res) => {
+  if (!isSuperAdmin(req)) return res.status(403).json({ error: 'Accès refusé' });
   try {
     if (req.params.id === req.user.id) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } });

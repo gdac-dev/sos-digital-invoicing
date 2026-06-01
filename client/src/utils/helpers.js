@@ -11,11 +11,12 @@ export const statusColors = {
   accepted: '#22c55e', declined: '#ef4444', expired: '#f97316', converted: '#0ea5e9',
 };
 
-export const openWhatsApp = (invoiceNumber, companyName = 'SOS DIGITAL', lang = 'fr') => {
-  const phone = '237653522435';
+export const openWhatsApp = (invoiceNumber, companyName = 'SOS DIGITAL', lang = 'fr', clientPhone = '', clientName = '', clientCompany = '') => {
+  const phone = clientPhone ? clientPhone.replace(/\D/g, '') : '';
+  const recipient = clientCompany ? `${clientName} (${clientCompany})` : clientName;
   const msg = lang === 'fr'
-    ? `Bonjour, veuillez trouver ci-joint votre facture ${companyName} #${invoiceNumber}.`
-    : `Hello, please find attached your ${companyName} invoice #${invoiceNumber}.`;
+    ? `Bonjour ${recipient ? recipient + ',' : ''}\nVeuillez trouver ci-joint votre facture ${companyName} #${invoiceNumber}.`
+    : `Hello ${recipient ? recipient + ',' : ''}\nPlease find attached your ${companyName} invoice #${invoiceNumber}.`;
     
   if (window.electronAPI) {
     window.electronAPI.openExternal(`whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`);

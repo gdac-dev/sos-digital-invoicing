@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLang } from '../../context/LangContext';
 import { MessageCircle, X, Send, ChevronDown } from 'lucide-react';
+import logoImg from '../../assets/logo.jpeg';
 
 const FAQ = {
   fr: [
@@ -133,7 +134,7 @@ export default function ChatbotWidget() {
           {/* Header */}
           <div style={{ background: 'linear-gradient(135deg, #0369A1, #0EA5E9)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.3)', flexShrink: 0 }}>
-              <img src="./logo.jpeg" alt="Bot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={logoImg} alt="Bot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ color: 'white', fontWeight: 700, fontSize: 13, lineHeight: 1 }}>Assistant SOS DIGITAL</div>
@@ -153,7 +154,7 @@ export default function ChatbotWidget() {
               <div key={i} style={{ display: 'flex', justifyContent: m.from === 'user' ? 'flex-end' : 'flex-start' }}>
                 {m.from === 'bot' && (
                   <div style={{ width: 26, height: 26, borderRadius: '50%', overflow: 'hidden', marginRight: 6, flexShrink: 0, alignSelf: 'flex-end' }}>
-                    <img src="./logo.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={logoImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 )}
                 <div style={{
@@ -167,7 +168,7 @@ export default function ChatbotWidget() {
             {typing && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 26, height: 26, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/logo.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={logoImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ background: 'var(--bg3)', borderRadius: '14px 14px 14px 2px', padding: '8px 14px', display: 'flex', gap: 4 }}>
                   {[0,1,2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#0EA5E9', display: 'inline-block', animation: `bounce 0.8s ${i*0.15}s infinite` }} />)}

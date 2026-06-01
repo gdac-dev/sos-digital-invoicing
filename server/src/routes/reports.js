@@ -1,15 +1,15 @@
 import express from 'express';
 import { prisma } from '../index.js';
-import { authenticate, requireAdminOrAccounting } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
-router.use(authenticate, requireAdminOrAccounting);
+router.use(authenticate);
 
 // GET /api/reports/invoices
 router.get('/invoices', async (req, res) => {
   try {
     const { from, to, clientId, status } = req.query;
-    const where = {};
+    const where = { userId: req.user.id };
     if (status) where.status = status;
     if (clientId) where.clientId = clientId;
     if (from || to) {
@@ -41,9 +41,9 @@ router.get('/summary', async (req, res) => {
     const start = new Date(`${year}-01-01`);
     const end = new Date(`${year}-12-31T23:59:59`);
     const [invoices, payments, quotes] = await Promise.all([
-      prisma.invoice.findMany({ where: { issueDate: { gte: start, lte: end } } }),
-      prisma.payment.findMany({ where: { date: { gte: start, lte: end } } }),
-      prisma.quote.findMany({ where: { issueDate: { gte: start, lte: end } } }),
+      prisma.invoice.findMany({ where: { issueDate: { gte: start, lte: end }, userId: req.user.id } }),
+      prisma.payment.findMany({ where: { date: { gte: start, lte: end }, invoice: { userId: req.user.id } } }),
+      prisma.quote.findMany({ where: { issueDate: { gte: start, lte: end }, userId: req.user.id } }),
     ]);
     const byMonth = Array.from({ length: 12 }, (_, i) => {
       const m = i + 1;

@@ -28,15 +28,22 @@ export default function InvoiceDetail() {
     load();
   };
 
-  const handleWhatsApp = () => {
-    handlePDF();
-    openWhatsApp(invoice.number, invoice.companyData?.name || 'SOS DIGITAL', lang);
+  const handleWhatsApp = async () => {
+    await handlePDF();
+    openWhatsApp(
+      invoice.number,
+      invoice.companyData?.name || 'SOS DIGITAL',
+      lang,
+      invoice.client?.phone,
+      invoice.client?.name,
+      invoice.client?.company
+    );
   };
   
-  const handlePDF = () => {
+  const handlePDF = async () => {
     const el = document.getElementById('hidden-invoice-preview');
     if (el) {
-      exportInvoicePDF(el, { number: invoice.number });
+      await exportInvoicePDF(el, { number: invoice.number });
     } else {
       toast.error('Erreur lors de la préparation du PDF');
     }

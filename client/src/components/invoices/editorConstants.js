@@ -17,6 +17,7 @@ export const TEMPLATES = {
   classic:  'Classique',
   modern:   'Moderne',
   minimalist:  'Minimaliste',
+  corporate: 'Corporate Orange',
 };
 
 export const WATERMARK_STYLES = ['Texte estompé', 'Contour', 'Diagonal'];
@@ -28,7 +29,7 @@ export const UNITS = ['Unité', 'Heure', 'Jour', 'Forfait', 'Mois', 'kg', 'm²',
 
 export const INITIAL_DESIGN = {
   docTitle: 'FACTURE',
-  template: 'elegant',
+  template: 'classic',
   palette: 'skyblue',
   font: 'Inter',
   watermark: { type: 'none', text: 'BROUILLON', style: 'Texte estompé', position: 'Centre de la page', size: 80, opacity: 30 },
