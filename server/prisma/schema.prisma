@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -12,7 +12,7 @@ model User {
   name        String
   email       String    @unique
   password    String
-  role        Role      @default(sales)
+  role        String    @default("sales")
   canViewData Boolean   @default(true)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -34,7 +34,7 @@ model Client {
   city      String?
   country   String    @default("Cameroun")
   taxId     String?
-  status    ClientStatus @default(active)
+  status    String    @default("active")
   notes     String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -66,9 +66,9 @@ model Invoice {
   number       String        @unique
   clientId     String
   userId       String
-  templateType TemplateType  @default(classic)
+  templateType String        @default("classic")
   palette      String        @default("skyblue")
-  status       InvoiceStatus @default(draft)
+  status       String        @default("draft")
   language     String        @default("fr")
   subtotal     Float         @default(0)
   taxRate      Float         @default(0)
@@ -81,11 +81,11 @@ model Invoice {
   notes        String?
   footer       String?
   font         String        @default("Inter")
-  watermark    Json?
-  stamp        Json?
+  watermark    String?       // JSON stringified
+  stamp        String?       // JSON stringified
   labour       Float         @default(0)
   extra        Float         @default(0)
-  companyData  Json?
+  companyData  String?       // JSON stringified
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -116,22 +116,22 @@ model Quote {
   number             String      @unique
   clientId           String
   userId             String
-  templateType       TemplateType @default(classic)
-  palette            String       @default("skyblue")
-  status             QuoteStatus  @default(draft)
-  language           String       @default("fr")
-  subtotal           Float        @default(0)
-  taxRate            Float        @default(0)
-  taxAmount          Float        @default(0)
-  discount           Float        @default(0)
-  total              Float        @default(0)
-  currency           String       @default("FCFA")
-  issueDate          DateTime     @default(now())
+  templateType       String      @default("classic")
+  palette            String      @default("skyblue")
+  status             String      @default("draft")
+  language           String      @default("fr")
+  subtotal           Float       @default(0)
+  taxRate            Float       @default(0)
+  taxAmount          Float       @default(0)
+  discount           Float       @default(0)
+  total              Float       @default(0)
+  currency           String      @default("FCFA")
+  issueDate          DateTime    @default(now())
   validUntil         DateTime?
   notes              String?
-  convertedInvoiceId String?      @unique
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  convertedInvoiceId String?     @unique
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   client             Client       @relation(fields: [clientId], references: [id])
   user               User         @relation(fields: [userId], references: [id])
@@ -167,51 +167,8 @@ model Payment {
 model EmailReminder {
   id        String       @id @default(uuid())
   invoiceId String
-  type      ReminderType
+  type      String
   sentAt    DateTime     @default(now())
 
   invoice   Invoice      @relation(fields: [invoiceId], references: [id])
-}
-
-enum Role {
-  admin
-  sales
-  accounting
-}
-
-enum ClientStatus {
-  active
-  inactive
-  vip
-}
-
-enum InvoiceStatus {
-  draft
-  sent
-  viewed
-  paid
-  overdue
-  canceled
-}
-
-enum QuoteStatus {
-  draft
-  sent
-  accepted
-  declined
-  expired
-  converted
-}
-
-enum TemplateType {
-  classic
-  modern
-  elegant
-  minimalist
-  corporate
-}
-
-enum ReminderType {
-  day7
-  day14
 }

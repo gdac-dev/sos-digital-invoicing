@@ -12,6 +12,13 @@ const generateNumber = async () => {
   return `INV-${year}-${String(count + 1).padStart(4, '0')}`;
 };
 
+const parseInvoiceJSON = (inv) => ({
+  ...inv,
+  watermark: inv.watermark ? JSON.parse(inv.watermark) : null,
+  stamp: inv.stamp ? JSON.parse(inv.stamp) : null,
+  companyData: inv.companyData ? JSON.parse(inv.companyData) : null,
+});
+
 // GET /api/invoices
 router.get('/', async (req, res) => {
   try {
@@ -42,7 +49,7 @@ router.get('/', async (req, res) => {
       prisma.invoice.count({ where }),
     ]);
 
-    res.json({ invoices, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    res.json({ invoices: invoices.map(parseInvoiceJSON), total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -59,7 +66,7 @@ router.get('/:id', async (req, res) => {
       },
     });
     if (!invoice) return res.status(404).json({ error: 'Facture introuvable' });
-    res.json(invoice);
+    res.json(parseInvoiceJSON(invoice));
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -101,9 +108,11 @@ router.post('/', async (req, res) => {
         currency: currency || 'FCFA',
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: notes || null, footer: footer || null,
-        font: font || 'Inter', watermark: watermark || null, stamp: stamp || null,
+        font: font || 'Inter', 
+        watermark: watermark ? JSON.stringify(watermark) : null, 
+        stamp: stamp ? JSON.stringify(stamp) : null,
         labour: Number(labour) || 0, extra: Number(extra) || 0,
-        companyData: companyData || null,
+        companyData: companyData ? JSON.stringify(companyData) : null,
         items: {
           create: parsedItems.map(i => ({
             catalogItemId: i.catalogItemId,
@@ -117,7 +126,7 @@ router.post('/', async (req, res) => {
       },
       include: { client: true, items: true },
     });
-    res.status(201).json(invoice);
+    res.status(201).json(parseInvoiceJSON(invoice));
   } catch (e) {
     console.error('Invoice creation error:', e);
     res.status(500).json({ error: e.message || 'Erreur serveur' });
@@ -137,11 +146,11 @@ router.patch('/:id', async (req, res) => {
     if (notes !== undefined) updateData.notes = notes;
     if (footer !== undefined) updateData.footer = footer;
     if (font !== undefined) updateData.font = font;
-    if (watermark !== undefined) updateData.watermark = watermark;
-    if (stamp !== undefined) updateData.stamp = stamp;
+    if (watermark !== undefined) updateData.watermark = watermark ? JSON.stringify(watermark) : null;
+    if (stamp !== undefined) updateData.stamp = stamp ? JSON.stringify(stamp) : null;
     if (labour !== undefined) updateData.labour = Number(labour);
     if (extra !== undefined) updateData.extra = Number(extra);
-    if (companyData !== undefined) updateData.companyData = companyData;
+    if (companyData !== undefined) updateData.companyData = companyData ? JSON.stringify(companyData) : null;
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (items) {
       const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
@@ -172,7 +181,7 @@ router.patch('/:id', async (req, res) => {
       data: updateData,
       include: { client: true, items: true, payments: true },
     });
-    res.json(invoice);
+    res.json(parseInvoiceJSON(invoice));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 

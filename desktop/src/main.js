@@ -145,21 +145,30 @@ const { spawn } = require('child_process');
 
 function startBackend() {
   return new Promise((resolve, reject) => {
-    const dbUrl = store.get('dbUrl');
-    if (!dbUrl) {
-      return resolve(false); // Backend needs DB config
-    }
+    // Use local SQLite database in the userData directory
+    const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
+    const dbUrl = `file:${dbPath}`;
 
     const serverDir = IS_DEV 
       ? path.join(__dirname, '../../server') 
       : path.join(process.resourcesPath, 'server');
 
+    // If database doesn't exist, copy from template
+    if (!fs.existsSync(dbPath)) {
+      const templatePath = path.join(serverDir, 'prisma', 'template.db');
+      if (fs.existsSync(templatePath)) {
+        console.log('Copying SQLite template database to:', dbPath);
+        fs.copyFileSync(templatePath, dbPath);
+      } else {
+        console.warn('Template DB not found at:', templatePath, '- Prisma will create an empty one (but tables will be missing)');
+      }
+    }
+
     const serverEntry = path.join(serverDir, 'src', 'index.js');
     
     console.log('Starting backend server...');
     console.log('  Server dir:', serverDir);
-    console.log('  Entry:', serverEntry);
-    console.log('  execPath:', process.execPath);
+    console.log('  DB Path:', dbPath);
     
     const serverEnv = {
       ...process.env,
