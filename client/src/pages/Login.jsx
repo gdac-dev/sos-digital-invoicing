@@ -45,12 +45,17 @@ export default function Login() {
     } catch (err) {
       // Assuming backend returns error message in err.response.data.error
       const msg = err.response?.data?.error;
-      if (msg && msg.toLowerCase().includes('email')) {
+      if (msg === 'USER_DELETED') {
+        const errorText = lang === 'fr' ? "L'utilisateur n'existe pas" : "User does not exist";
+        setErrors({ email: errorText });
+        toast.error(errorText);
+      } else if (msg && msg.toLowerCase().includes('email')) {
         setErrors({ email: msg });
+        toast.error(msg);
       } else {
         setErrors({ form: isRegister ? t.auth.registerError : t.auth.loginError });
+        toast.error(msg || (isRegister ? t.auth.registerError : t.auth.loginError));
       }
-      toast.error(msg || (isRegister ? t.auth.registerError : t.auth.loginError));
     } finally {
       setLoading(false);
     }

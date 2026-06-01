@@ -14,8 +14,11 @@ router.post('/login', async (req, res) => {
     }
 
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (!user || !user.isActive) {
+    if (!user) {
       return res.status(401).json({ error: 'Identifiants invalides' });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ error: 'USER_DELETED' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
