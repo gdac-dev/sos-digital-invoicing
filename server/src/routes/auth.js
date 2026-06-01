@@ -85,7 +85,7 @@ router.post('/register', async (req, res) => {
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
-        role: 'admin',
+        role: 'sales', // Default role must not be admin
       },
     });
 

@@ -27,20 +27,20 @@ const PORT = process.env.PORT || 3001;
 async function ensureAdminUser() {
   try {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@sosdigital.cm';
-    const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
-    if (!existing) {
-      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@SOS2024', 12);
-      await prisma.user.create({
-        data: {
-          name: process.env.ADMIN_NAME || 'Administrateur SOS',
-          email: adminEmail,
-          password: hashedPassword,
-          role: 'admin',
-          canViewData: true,
-        },
-      });
-      console.log(`✅ Admin user created: ${adminEmail}`);
-    }
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@SOS2024', 12);
+    
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { role: 'admin' }, // Force admin role if they accidentally changed it
+      create: {
+        name: process.env.ADMIN_NAME || 'Administrateur SOS',
+        email: adminEmail,
+        password: hashedPassword,
+        role: 'admin',
+        canViewData: true,
+      },
+    });
+    console.log(`✅ Admin user ensured: ${adminEmail}`);
   } catch (err) {
     console.error('Could not ensure admin user:', err.message);
   }
