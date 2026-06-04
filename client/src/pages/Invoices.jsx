@@ -9,7 +9,7 @@ import { Plus, Search, Eye, Trash2, FileText, Edit } from 'lucide-react';
 const STATUSES = ['draft','sent','viewed','paid','overdue','canceled'];
 
 export default function Invoices() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [total, setTotal] = useState(0);
