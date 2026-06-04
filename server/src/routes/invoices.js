@@ -8,8 +8,30 @@ router.use(authenticate);
 // Generate invoice number
 const generateNumber = async () => {
   const year = new Date().getFullYear();
-  const count = await prisma.invoice.count();
-  return `INV-${year}-${String(count + 1).padStart(4, '0')}`;
+  const lastInvoice = await prisma.invoice.findFirst({
+    where: { number: { startsWith: `INV-${year}-` } },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  let nextSeq = 1;
+  if (lastInvoice) {
+    const parts = lastInvoice.number.split('-');
+    if (parts.length === 3) {
+      const lastSeq = parseInt(parts[2], 10);
+      if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+    }
+  }
+
+  let number = `INV-${year}-${String(nextSeq).padStart(4, '0')}`;
+  let exists = await prisma.invoice.findUnique({ where: { number } });
+  
+  while (exists) {
+    nextSeq++;
+    number = `INV-${year}-${String(nextSeq).padStart(4, '0')}`;
+    exists = await prisma.invoice.findUnique({ where: { number } });
+  }
+
+  return number;
 };
 
 const parseInvoiceJSON = (inv) => ({

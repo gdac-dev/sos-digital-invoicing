@@ -7,8 +7,30 @@ router.use(authenticate);
 
 const generateQuoteNumber = async () => {
   const year = new Date().getFullYear();
-  const count = await prisma.quote.count();
-  return `DEV-${year}-${String(count + 1).padStart(4, '0')}`;
+  const lastQuote = await prisma.quote.findFirst({
+    where: { number: { startsWith: `DEV-${year}-` } },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  let nextSeq = 1;
+  if (lastQuote) {
+    const parts = lastQuote.number.split('-');
+    if (parts.length === 3) {
+      const lastSeq = parseInt(parts[2], 10);
+      if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+    }
+  }
+
+  let number = `DEV-${year}-${String(nextSeq).padStart(4, '0')}`;
+  let exists = await prisma.quote.findUnique({ where: { number } });
+  
+  while (exists) {
+    nextSeq++;
+    number = `DEV-${year}-${String(nextSeq).padStart(4, '0')}`;
+    exists = await prisma.quote.findUnique({ where: { number } });
+  }
+
+  return number;
 };
 
 // GET /api/quotes
@@ -90,8 +112,28 @@ router.post('/:id/convert', async (req, res) => {
     if (quote.convertedInvoiceId) return res.status(400).json({ error: 'Devis déjà converti' });
 
     const year = new Date().getFullYear();
-    const count = await prisma.invoice.count();
-    const number = `INV-${year}-${String(count + 1).padStart(4, '0')}`;
+    const lastInvoice = await prisma.invoice.findFirst({
+      where: { number: { startsWith: `INV-${year}-` } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    let nextSeq = 1;
+    if (lastInvoice) {
+      const parts = lastInvoice.number.split('-');
+      if (parts.length === 3) {
+        const lastSeq = parseInt(parts[2], 10);
+        if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+      }
+    }
+
+    let number = `INV-${year}-${String(nextSeq).padStart(4, '0')}`;
+    let exists = await prisma.invoice.findUnique({ where: { number } });
+    
+    while (exists) {
+      nextSeq++;
+      number = `INV-${year}-${String(nextSeq).padStart(4, '0')}`;
+      exists = await prisma.invoice.findUnique({ where: { number } });
+    }
 
     const invoice = await prisma.invoice.create({
       data: {
