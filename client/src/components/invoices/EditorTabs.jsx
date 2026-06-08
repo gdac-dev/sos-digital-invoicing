@@ -23,7 +23,30 @@ export function EntrepriseTab({ company, setCompany }) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => set('logo', ev.target.result);
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to max 200x200 and compress as JPEG to keep data small
+        const MAX = 200;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+        set('logo', compressed);
+      };
+      img.onerror = () => {
+        // If Image() can't decode it (e.g. some exotic format), use raw base64 anyway
+        set('logo', ev.target.result);
+      };
+      img.src = ev.target.result;
+    };
     reader.readAsDataURL(file);
   };
   return (
@@ -248,7 +271,25 @@ export function DesignTab({ design, setDesign }) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => setStamp('image', ev.target.result);
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 200;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        setStamp('image', canvas.toDataURL('image/png', 0.9));
+      };
+      img.onerror = () => setStamp('image', ev.target.result);
+      img.src = ev.target.result;
+    };
     reader.readAsDataURL(file);
   };
 

@@ -59,11 +59,24 @@ export default function InvoiceEditor() {
   const TABS = lang === 'fr' ? TABS_FR : TABS_EN;
   const draftKey = `invoice_draft_${id || 'new'}`;
 
-  // Auto-save to localStorage
+  // Auto-save to localStorage (debounced, safe)
+  const saveTimer = useRef(null);
   useEffect(() => {
     if (loadingInvoice) return;
-    const draft = { company, client, details, sections, extras, notes, design };
-    localStorage.setItem(draftKey, JSON.stringify(draft));
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try {
+        // Exclude large base64 blobs (logo, stamp image) to avoid localStorage quota errors
+        const safeCompany = { ...company, logo: company.logo?.startsWith('data:') ? '__b64__' : company.logo };
+        const safeDesign = { ...design, stamp: { ...design.stamp, image: design.stamp?.image?.startsWith('data:') ? '__b64__' : design.stamp?.image } };
+        const draft = { company: safeCompany, client, details, sections, extras, notes, design: safeDesign };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+      } catch (e) {
+        // localStorage quota exceeded – silently ignore
+        console.warn('Draft auto-save skipped (storage full):', e.message);
+      }
+    }, 800);
+    return () => clearTimeout(saveTimer.current);
   }, [company, client, details, sections, extras, notes, design, loadingInvoice, draftKey]);
 
   // Load draft or reset if new
@@ -76,13 +89,21 @@ export default function InvoiceEditor() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed.company) setCompany(parsed.company);
+          if (parsed.company) {
+            // Don't restore the '__b64__' placeholder - keep default logo
+            if (parsed.company.logo === '__b64__') delete parsed.company.logo;
+            setCompany(c => ({ ...c, ...parsed.company }));
+          }
           if (parsed.client) setClient(parsed.client);
           if (parsed.details) setDetails(parsed.details);
           if (parsed.sections) setSections(parsed.sections);
           if (parsed.extras) setExtras(parsed.extras);
           if (parsed.notes) setNotes(parsed.notes);
-          if (parsed.design) setDesign(parsed.design);
+          if (parsed.design) {
+            // Don't restore the '__b64__' placeholder for stamp image
+            if (parsed.design.stamp?.image === '__b64__') delete parsed.design.stamp.image;
+            setDesign(d => ({ ...d, ...parsed.design }));
+          }
         } catch (e) { console.error('Failed to parse draft', e); }
       }
     }
