@@ -310,22 +310,92 @@ const BOT_INTRO = {
 // SMART MATCHING ENGINE
 // ─────────────────────────────────────────────
 
+// Common stopwords to ignore during matching
+const STOPWORDS = new Set([
+  // French
+  'le','la','les','un','une','des','du','de','au','aux','ce','ces','cette','cet',
+  'je','tu','il','elle','on','nous','vous','ils','elles','me','te','se','lui','leur',
+  'mon','ma','mes','ton','ta','tes','son','sa','ses','notre','nos','votre','vos',
+  'qui','que','quoi','dont','ou','quel','quelle','quels','quelles',
+  'et','ou','mais','donc','car','ni','si','ne','pas','plus','moins',
+  'est','es','suis','sont','etre','avoir','fait','faire','peut','peux','veux','veut',
+  'dans','sur','sous','avec','pour','par','en','entre','vers','chez',
+  'a','y','ai','as','ont','va','vais',
+  'bien','aussi','tres','trop','peu','assez','tout','tous','toute','toutes',
+  'ici','la','ou','quand','comment','pourquoi','combien',
+  // English
+  'the','a','an','is','am','are','was','were','be','been','being',
+  'i','you','he','she','it','we','they','me','him','her','us','them',
+  'my','your','his','its','our','their',
+  'this','that','these','those','what','which','who','whom','whose',
+  'and','or','but','so','if','not','no','yes',
+  'do','does','did','have','has','had','will','would','can','could','shall','should',
+  'in','on','at','to','of','for','with','from','by','about','into',
+  'very','too','also','just','only','even','still','here','there','where','when','how','why',
+]);
+
 function normalize(str) {
   return str.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/['']/g, "'")
     .replace(/[^a-z0-9' ]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+// Conversational patterns — questions about the bot itself
+const CONVERSATION = {
+  fr: [
+    { patterns: ['qui es tu', 'tu es qui', 'c\'est qui', 'presente toi', 'tu t\'appelle', 'ton nom', 'quel est ton nom'],
+      reply: '🤖 Je suis l\'**assistant virtuel SOS DIGITAL** ! Je suis ici pour vous guider dans l\'utilisation de l\'application. Je peux répondre à vos questions sur les factures, devis, clients, paiements, rapports et toutes les fonctionnalités. N\'hésitez pas à me poser n\'importe quelle question !' },
+    { patterns: ['pourquoi tu es la', 'pourquoi es tu la', 'tu fais quoi', 'a quoi tu sers', 'tu sers a quoi', 'quel est ton role', 'ton role', 'ta mission'],
+      reply: '💡 Je suis là pour vous **aider à utiliser SOS DIGITAL** ! Mon rôle est de :\n\n• 📄 Vous guider pour créer des factures et devis\n• 👤 Expliquer la gestion des clients\n• 💰 Aide sur les paiements et rapports\n• 🎨 Conseils sur le design et les templates\n• ⚙️ Questions sur les paramètres\n\nSi je ne peux pas répondre, je vous mets en contact direct avec l\'administrateur ! 📬' },
+    { patterns: ['que peux tu faire', 'que sais tu faire', 'qu\'est ce que tu peux', 'tes capacites', 'tes fonctions', 'aide moi'],
+      reply: '🛠️ Voici ce que je peux faire pour vous :\n\n📄 **Factures** — créer, modifier, supprimer, statuts, PDF\n📋 **Devis** — créer, convertir en facture\n👤 **Clients** — ajouter, modifier, catégories VIP\n💰 **Paiements** — enregistrer, historique\n📦 **Catalogue** — services et prix par défaut\n📊 **Rapports** — statistiques, export CSV\n🎨 **Design** — templates, palettes, logo, tampon\n⚙️ **Paramètres** — utilisateurs, rôles\n📬 **Contact admin** — email et WhatsApp direct\n\nPosez-moi votre question ! 😊' },
+    { patterns: ['comment ca va', 'ca va', 'tu vas bien', 'comment vas tu', 'la forme'],
+      reply: 'Je vais très bien, merci ! 😊 Je suis prêt à vous aider. Que souhaitez-vous savoir sur SOS DIGITAL ?' },
+    { patterns: ['c\'est quoi cette app', 'c\'est quoi ce logiciel', 'c\'est quoi sos', 'c\'est quoi l\'app', 'ca sert a quoi cette app', 'a quoi sert'],
+      reply: '🏢 **SOS DIGITAL** est une application professionnelle de **facturation et gestion commerciale**. Elle permet de :\n\n📄 Créer des factures et devis professionnels\n👤 Gérer votre base de clients (CRM)\n💰 Suivre les paiements\n📦 Catalogue de services\n📊 Voir vos rapports et statistiques\n🎨 Personnaliser le design avec 5 modèles\n📥 Exporter en PDF et partager via WhatsApp\n🌐 Interface bilingue français / anglais' },
+    { patterns: ['tu es un robot', 'tu es humain', 'tu es une ia', 'tu es reel', 'vrai personne'],
+      reply: '🤖 Je suis un **assistant automatique** intégré à SOS DIGITAL. Je ne suis pas un humain, mais je connais très bien l\'application ! Si vous avez besoin de parler à une vraie personne, cliquez sur **Contacter l\'admin** et je vous mets en relation instantanément. 📬' },
+    { patterns: ['test', 'essai', 'allo', 'oho', 'hey', 'hola'],
+      reply: 'Oui, je suis là ! 👋 Comment puis-je vous aider avec SOS DIGITAL ?' },
+    { patterns: ['lol', 'mdr', 'haha', 'ptdr', 'xd', 'drole'],
+      reply: '😄 Content de vous amuser ! Mais n\'oubliez pas, je suis aussi là pour vous aider. Une question sur l\'application ?' },
+    { patterns: ['probleme', 'ca marche pas', 'ca fonctionne pas', 'erreur', 'bug', 'plante', 'bloque'],
+      reply: '⚠️ Désolé pour le désagrément ! Pouvez-vous préciser :\n• Quelle page ou fonctionnalité est concernée ?\n• Quel message d\'erreur voyez-vous ?\n\nSi le problème persiste, contactez directement l\'administrateur via **WhatsApp** ou **Email** pour une résolution rapide. 📬' },
+  ],
+  en: [
+    { patterns: ['who are you', 'what are you', 'introduce yourself', 'your name', 'what is your name'],
+      reply: '🤖 I\'m the **SOS DIGITAL virtual assistant**! I\'m here to help you navigate the application. I can answer questions about invoices, quotes, clients, payments, reports and all features. Feel free to ask me anything!' },
+    { patterns: ['why are you here', 'what do you do', 'what is your purpose', 'your role', 'your mission', 'what for'],
+      reply: '💡 I\'m here to **help you use SOS DIGITAL**! My role is to:\n\n• 📄 Guide you through creating invoices and quotes\n• 👤 Explain client management\n• 💰 Help with payments and reports\n• 🎨 Advise on design and templates\n• ⚙️ Answer settings questions\n\nIf I can\'t answer, I\'ll connect you directly with the administrator! 📬' },
+    { patterns: ['what can you do', 'your capabilities', 'your functions', 'help me'],
+      reply: '🛠️ Here\'s what I can help you with:\n\n📄 **Invoices** — create, edit, delete, statuses, PDF\n📋 **Quotes** — create, convert to invoice\n👤 **Clients** — add, edit, VIP categories\n💰 **Payments** — record, history\n📦 **Catalog** — services and default prices\n📊 **Reports** — statistics, CSV export\n🎨 **Design** — templates, palettes, logo, stamp\n⚙️ **Settings** — users, roles\n📬 **Contact admin** — direct email and WhatsApp\n\nAsk me your question! 😊' },
+    { patterns: ['how are you', 'how do you do', 'are you ok', 'you good'],
+      reply: 'I\'m doing great, thanks for asking! 😊 Ready to help you. What would you like to know about SOS DIGITAL?' },
+    { patterns: ['what is this app', 'what is this software', 'what is sos', 'what does this do'],
+      reply: '🏢 **SOS DIGITAL** is a professional **invoicing and business management** application. It lets you:\n\n📄 Create professional invoices and quotes\n👤 Manage your client base (CRM)\n💰 Track payments\n📦 Service catalog\n📊 View reports and statistics\n🎨 Customize design with 5 templates\n📥 Export as PDF and share via WhatsApp\n🌐 Bilingual French / English interface' },
+    { patterns: ['are you a robot', 'are you human', 'are you ai', 'are you real', 'real person'],
+      reply: '🤖 I\'m an **automated assistant** built into SOS DIGITAL. I\'m not a human, but I know the app very well! If you need to talk to a real person, click **Contact admin** and I\'ll connect you instantly. 📬' },
+    { patterns: ['test', 'testing', 'hello there', 'hey there'],
+      reply: 'Yes, I\'m here! 👋 How can I help you with SOS DIGITAL?' },
+    { patterns: ['lol', 'haha', 'funny', 'lmao'],
+      reply: '😄 Glad to amuse you! But remember, I\'m also here to help. Any questions about the app?' },
+    { patterns: ['problem', 'not working', 'doesnt work', 'error', 'bug', 'crash', 'stuck', 'broken'],
+      reply: '⚠️ Sorry for the trouble! Can you specify:\n• Which page or feature is affected?\n• What error message do you see?\n\nIf the problem persists, contact the administrator directly via **WhatsApp** or **Email** for quick resolution. 📬' },
+  ],
+};
+
 function findAnswer(message, lang) {
   const kb = KB[lang];
   const input = normalize(message);
-  const inputWords = input.split(' ');
+  const inputWords = input.split(' ').filter(w => w.length > 0);
+  // Meaningful words = excluding stopwords and very short words
+  const meaningfulWords = inputWords.filter(w => w.length >= 3 && !STOPWORDS.has(w));
 
-  // 1. Check greetings
-  if (kb.greetings.patterns.some(p => input.includes(normalize(p)))) {
+  // 1. Check greetings (only if message is short / purely a greeting)
+  if (inputWords.length <= 4 && kb.greetings.patterns.some(p => input.includes(normalize(p)))) {
     return { type: 'greeting', answer: kb.greetings.reply };
   }
 
@@ -339,12 +409,33 @@ function findAnswer(message, lang) {
     return { type: 'goodbye', answer: kb.goodbye.reply };
   }
 
-  // 4. Check admin contact request
-  if (kb.contactPatterns.some(p => input.includes(normalize(p)))) {
+  // 4. Check conversational / meta questions about the bot
+  const convos = CONVERSATION[lang];
+  for (const convo of convos) {
+    for (const pattern of convo.patterns) {
+      const np = normalize(pattern);
+      // Full phrase match
+      if (input.includes(np)) return { type: 'convo', answer: convo.reply };
+      // High word overlap (at least 60% of pattern words)
+      const patternWords = np.split(' ').filter(w => w.length >= 2 && !STOPWORDS.has(w));
+      if (patternWords.length > 0) {
+        const matched = patternWords.filter(pw => inputWords.some(iw => iw === pw || (iw.length >= 3 && pw.length >= 3 && (iw.includes(pw) || pw.includes(iw))))).length;
+        if (matched / patternWords.length >= 0.6 && matched >= 1) {
+          return { type: 'convo', answer: convo.reply };
+        }
+      }
+    }
+  }
+
+  // 5. Check admin contact request
+  if (kb.contactPatterns.some(p => {
+    const np = normalize(p);
+    return np.length >= 4 && inputWords.includes(np);
+  })) {
     return { type: 'contact', answer: kb.contactAdmin };
   }
 
-  // 5. Search knowledge base with scoring
+  // 6. Search knowledge base with scoring (only using meaningful words)
   let bestMatch = null;
   let bestScore = 0;
 
@@ -354,33 +445,33 @@ function findAnswer(message, lang) {
 
       for (const keyPhrase of entry.keys) {
         const normalKey = normalize(keyPhrase);
-        const keyWords = normalKey.split(' ');
+        const keyWords = normalKey.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w));
 
         // Exact phrase match → highest score
-        if (input.includes(normalKey)) {
+        if (input.includes(normalKey) && normalKey.length >= 4) {
           const score = keyWords.length * 3 + normalKey.length * 0.1;
           if (score > entryBestScore) entryBestScore = score;
           continue;
         }
 
-        // Word overlap scoring
+        if (keyWords.length === 0) continue;
+
+        // Word overlap scoring (only meaningful words)
         let matchedWords = 0;
-        let totalWeight = 0;
         for (const kw of keyWords) {
-          if (kw.length < 2) continue;
-          totalWeight++;
           // Exact word match
-          if (inputWords.includes(kw)) { matchedWords += 1; continue; }
-          // Partial match (word starts with or contains)
-          if (inputWords.some(iw => iw.includes(kw) || kw.includes(iw))) { matchedWords += 0.7; continue; }
+          if (meaningfulWords.includes(kw)) { matchedWords += 1; continue; }
+          // Partial match — both words must be 4+ chars to count
+          if (kw.length >= 4 && meaningfulWords.some(iw => iw.length >= 4 && (iw.includes(kw) || kw.includes(iw)))) {
+            matchedWords += 0.6;
+            continue;
+          }
         }
 
-        if (totalWeight > 0) {
-          const ratio = matchedWords / totalWeight;
-          if (ratio >= 0.4) {
-            const score = ratio * keyWords.length + matchedWords * 0.5;
-            if (score > entryBestScore) entryBestScore = score;
-          }
+        const ratio = matchedWords / keyWords.length;
+        if (ratio >= 0.5 && matchedWords >= 1) {
+          const score = ratio * keyWords.length * 2 + matchedWords;
+          if (score > entryBestScore) entryBestScore = score;
         }
       }
 
@@ -391,7 +482,7 @@ function findAnswer(message, lang) {
     }
   }
 
-  if (bestMatch && bestScore >= 0.5) {
+  if (bestMatch && bestScore >= 1.5) {
     return { type: 'faq', answer: bestMatch.answer };
   }
 
