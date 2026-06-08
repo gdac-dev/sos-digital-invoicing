@@ -81,7 +81,7 @@ export default function Settings() {
           <div style={{ width: 60, height: 60, borderRadius: 16, background: 'linear-gradient(135deg,#0EA5E9,#0369A1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: 'white', fontFamily: 'Inter,sans-serif' }}>SD</div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'Inter,sans-serif' }}>SOS DIGITAL</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>contact@sosdigital.cm · +237 653 522 435</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>contact@sosdigital.cm · +237 6 83 09 16 28</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Douala, Cameroun</div>
           </div>
         </div>

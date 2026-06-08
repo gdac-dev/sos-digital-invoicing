@@ -38,7 +38,7 @@ export const INITIAL_DESIGN = {
 
 export const INITIAL_COMPANY = {
   name: 'SOS DIGITAL', address: '123 Rue Exemple', city: 'Douala', country: 'Cameroun',
-  phone: '+237 653 522 435', email: 'contact@sosdigital.cm', taxId: '',
+  phone: '+237 6 83 09 16 28', email: 'contact@sosdigital.cm', taxId: '',
   logo: '/logo.jpeg', activity: 'Facturation & Services Numériques',
 };
 

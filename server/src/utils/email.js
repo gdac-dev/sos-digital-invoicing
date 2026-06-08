@@ -28,7 +28,7 @@ const emailBase = (content) => `
     </div>
     <div style="background:#f1f5f9;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
       <p style="margin:0;color:#94a3b8;font-size:12px;">SOS DIGITAL — Tous droits réservés © ${new Date().getFullYear()}</p>
-      <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">Tél: +237 653 522 435</p>
+      <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">Tél: +237 6 83 09 16 28</p>
     </div>
   </div>
 </body>

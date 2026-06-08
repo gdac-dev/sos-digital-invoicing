@@ -355,7 +355,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
             {company.name} · {company.phone} · {company.email}{company.taxId ? ` · ${t.taxId} ${company.taxId}` : ''}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <QRCodeSVG value="https://wa.me/237653522435" size={40} level="M" />
+            <QRCodeSVG value="https://wa.me/237683091628" size={40} level="M" />
             <span style={{ fontSize: 6, color: '#94a3b8' }}>{t.contact}</span>
           </div>
         </div>
