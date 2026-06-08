@@ -9,7 +9,7 @@ import { exportInvoicePDF } from '../utils/pdf';
 import PaymentModal from '../components/payments/PaymentModal';
 import InvoicePreview from '../components/invoices/InvoicePreview';
 
-const STATUSES = ['draft','sent','viewed','paid','overdue','canceled'];
+const STATUSES = ['draft','sent','viewed','partial','paid','overdue','canceled'];
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -38,6 +38,11 @@ export default function InvoiceDetail() {
       invoice.client?.name,
       invoice.client?.company
     );
+    // Mark as sent when shared via WhatsApp (only if still draft)
+    if (invoice.status === 'draft') {
+      await api.patch(`/invoices/${id}`, { status: 'sent' });
+      load();
+    }
   };
   
   const handlePDF = async () => {
@@ -69,7 +74,7 @@ export default function InvoiceDetail() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="btn btn-ghost btn-sm" onClick={handleWhatsApp}><MessageCircle size={14}/>{t.invoice.whatsapp}</button>
           <button className="btn btn-ghost btn-sm" onClick={handlePDF}><Download size={14}/>{t.invoice.export}</button>
-          {invoice.status !== 'paid' && (
+          {invoice.status !== 'paid' && invoice.status !== 'canceled' && (
             <button className="btn btn-primary btn-sm" onClick={() => setShowPayment(true)}><CreditCard size={14}/>{t.payment.add}</button>
           )}
         </div>

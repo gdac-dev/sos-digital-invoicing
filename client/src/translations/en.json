@@ -40,7 +40,7 @@
   },
   "status": {
     "draft": "Draft", "sent": "Sent", "viewed": "Viewed",
-    "paid": "Paid", "overdue": "Overdue", "canceled": "Canceled",
+    "partial": "Partial", "paid": "Paid", "overdue": "Overdue", "canceled": "Canceled",
     "active": "Active", "inactive": "Inactive", "vip": "VIP",
     "accepted": "Accepted", "declined": "Declined", "expired": "Expired",
     "converted": "Converted"

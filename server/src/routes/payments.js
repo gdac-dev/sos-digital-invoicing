@@ -43,13 +43,13 @@ router.post('/', async (req, res) => {
       },
     });
 
-    // Auto-update invoice status
+    // Auto-update invoice status based on total paid
     const totalPaid = invoice.payments.reduce((s, p) => s + p.amount, 0) + Number(amount);
     let newStatus = invoice.status;
     if (totalPaid >= invoice.total) {
       newStatus = 'paid';
     } else if (totalPaid > 0) {
-      newStatus = 'sent'; // partial — keep as sent
+      newStatus = 'partial';
     }
     await prisma.invoice.update({ where: { id: invoiceId }, data: { status: newStatus } });
 
@@ -60,9 +60,25 @@ router.post('/', async (req, res) => {
 // DELETE /api/payments/:id
 router.delete('/:id', async (req, res) => {
   try {
-    const payment = await prisma.payment.findUnique({ where: { id: req.params.id }, include: { invoice: true } });
+    const payment = await prisma.payment.findUnique({ where: { id: req.params.id }, include: { invoice: { include: { payments: true } } } });
     if (!payment || payment.invoice.userId !== req.user.id) return res.status(404).json({ error: 'Paiement introuvable' });
     await prisma.payment.delete({ where: { id: req.params.id } });
+
+    // Recalculate invoice status after deleting a payment
+    const remainingPaid = payment.invoice.payments
+      .filter(p => p.id !== req.params.id)
+      .reduce((s, p) => s + p.amount, 0);
+    let newStatus = payment.invoice.status;
+    if (remainingPaid >= payment.invoice.total) {
+      newStatus = 'paid';
+    } else if (remainingPaid > 0) {
+      newStatus = 'partial';
+    } else if (payment.invoice.status === 'paid' || payment.invoice.status === 'partial') {
+      // Revert to draft if all payments removed
+      newStatus = 'draft';
+    }
+    await prisma.invoice.update({ where: { id: payment.invoice.id }, data: { status: newStatus } });
+
     res.json({ message: 'Paiement supprimé' });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });

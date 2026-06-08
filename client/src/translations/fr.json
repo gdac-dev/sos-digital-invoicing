@@ -40,7 +40,7 @@
   },
   "status": {
     "draft": "Brouillon", "sent": "Envoyée", "viewed": "Consultée",
-    "paid": "Payée", "overdue": "En retard", "canceled": "Annulée",
+    "partial": "Partiel", "paid": "Payée", "overdue": "En retard", "canceled": "Annulée",
     "active": "Actif", "inactive": "Inactif", "vip": "VIP",
     "accepted": "Accepté", "declined": "Refusé", "expired": "Expiré",
     "converted": "Converti"

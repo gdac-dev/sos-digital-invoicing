@@ -6,7 +6,7 @@ import { formatCurrency, formatDate, statusColors } from '../utils/helpers';
 import toast from 'react-hot-toast';
 import { Plus, Search, Eye, Trash2, FileText, Edit } from 'lucide-react';
 
-const STATUSES = ['draft','sent','viewed','paid','overdue','canceled'];
+const STATUSES = ['draft','sent','viewed','partial','paid','overdue','canceled'];
 
 export default function Invoices() {
   const { t, lang } = useLang();

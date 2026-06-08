@@ -6,7 +6,7 @@ export const formatDate = (date, lang = 'fr') =>
 
 export const statusColors = {
   draft: '#94a3b8', sent: '#3b82f6', viewed: '#8b5cf6',
-  paid: '#22c55e', overdue: '#ef4444', canceled: '#6b7280',
+  partial: '#f59e0b', paid: '#22c55e', overdue: '#ef4444', canceled: '#6b7280',
   active: '#22c55e', inactive: '#94a3b8', vip: '#f59e0b',
   accepted: '#22c55e', declined: '#ef4444', expired: '#f97316', converted: '#0ea5e9',
 };
