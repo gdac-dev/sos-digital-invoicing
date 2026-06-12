@@ -12,7 +12,19 @@ export const statusColors = {
 };
 
 export const openWhatsApp = (invoiceNumber, companyName = 'SOS DIGITAL', lang = 'fr', clientPhone = '', clientName = '', clientCompany = '') => {
-  const phone = clientPhone ? clientPhone.replace(/\D/g, '') : '';
+  let phone = clientPhone ? clientPhone.replace(/\D/g, '') : '';
+
+  // Smart Cameroon phone detection:
+  // If it's a 9-digit number starting with 6 or 2 (Cameroonian mobile/landline), prepend 237
+  if (phone.length === 9 && /^[62]/.test(phone)) {
+    phone = '237' + phone;
+  }
+  // If someone typed e.g. "683091628" (8 digits after removing leading 0), handle "06..." format
+  if (phone.length === 10 && phone.startsWith('0') && /^0[62]/.test(phone)) {
+    phone = '237' + phone.substring(1);
+  }
+  // If already has country code (10+ digits not starting with 0), use as-is
+
   const recipient = clientCompany ? `${clientName} (${clientCompany})` : clientName;
   const msg = lang === 'fr'
     ? `Bonjour ${recipient ? recipient + ',' : ''}\nVeuillez trouver ci-joint votre facture ${companyName} #${invoiceNumber}.`

@@ -83,9 +83,12 @@ export default function InvoicePreview({ company, client, details, sections, ext
   if (displayTitle === 'DEVIS' && lang === 'en') displayTitle = 'QUOTE';
   if (displayTitle === 'QUOTE' && lang === 'fr') displayTitle = 'DEVIS';
 
+  // Helper: handle both 'qty' (editor) and 'quantity' (database) field names
+  const getQty = (item) => parseFloat(item.qty ?? item.quantity) || 0;
+
   // Compute totals
   const sectionTotals = sections.map(sec =>
-    sec.items.reduce((s, i) => s + (parseFloat(i.qty) || 0) * (parseFloat(i.unitPrice) || 0), 0)
+    sec.items.reduce((s, i) => s + getQty(i) * (parseFloat(i.unitPrice) || 0), 0)
   );
   const subtotal = sectionTotals.reduce((s, t) => s + t, 0);
   const labour = parseFloat(extras.labour) || 0;
@@ -132,7 +135,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
         }
       }}
       style={{
-        width: 595, minHeight: 842, background: 'white', position: 'relative', overflow: 'hidden',
+        width: 595, maxWidth: '100%', minHeight: 842, background: 'white', position: 'relative', overflow: 'hidden',
         boxShadow: '0 12px 48px rgba(0,0,0,0.18)', borderRadius: 3,
         fontFamily: font + ', sans-serif', color: '#0f172a', fontSize: 10.5,
         cursor: stamp.placing ? 'crosshair' : 'default',
@@ -272,11 +275,19 @@ export default function InvoicePreview({ company, client, details, sections, ext
           </div>
         </div>
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12, tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '6%' }} />
+            <col style={{ width: '34%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '20%' }} />
+          </colgroup>
           <thead>
             <tr style={{ background: isCorporate ? palette.primary : palette.dark }}>
               {[t.colNo, t.colDesc, t.colUnit, t.colQty, t.colPrice, t.colTotal].map((h, i) => (
-                <th key={h} style={{ padding: '6px 8px', color: 'white', fontSize: 8.5, fontWeight: 700, textAlign: i <= 1 ? 'left' : 'right', textTransform: 'uppercase' }}>{h}</th>
+                <th key={h} style={{ padding: '6px 4px', color: 'white', fontSize: 8, fontWeight: 700, textAlign: i <= 1 ? 'left' : 'right', textTransform: 'uppercase', overflow: 'hidden' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -288,22 +299,23 @@ export default function InvoicePreview({ company, client, details, sections, ext
                 </tr>
               )}
               {sec.items.map((item, ii) => {
-                const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
+                const itemQty = getQty(item);
+                const lineTotal = itemQty * (parseFloat(item.unitPrice) || 0);
                 return (
                   <tr key={`item-${si}-${ii}`} style={{ background: ii % 2 === 0 ? 'white' : '#f8fafc' }}>
-                    <td style={{ padding: '5px 8px', color: '#000000', fontSize: 8.5 }}>{ii + 1}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', fontSize: 9.5 }}>{item.description || <span style={{ color: '#cbd5e1' }}>...</span>}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{item.unit}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{item.qty}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{fmtN(item.unitPrice, locale)}</td>
-                    <td style={{ padding: '5px 8px', color: '#000000', textAlign: 'right', fontWeight: 600, fontSize: 9 }}>{fmtN(lineTotal, locale)}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', fontSize: 8.5 }}>{ii + 1}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', fontSize: 9, overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word' }}>{item.description || <span style={{ color: '#cbd5e1' }}>...</span>}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', textAlign: 'right', fontSize: 8.5, overflow: 'hidden' }}>{item.unit}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', textAlign: 'right', fontSize: 9 }}>{itemQty}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', textAlign: 'right', fontSize: 8.5, whiteSpace: 'nowrap' }}>{fmtN(item.unitPrice, locale)}</td>
+                    <td style={{ padding: '5px 4px', color: '#000000', textAlign: 'right', fontWeight: 600, fontSize: 9, whiteSpace: 'nowrap' }}>{fmtN(lineTotal, locale)}</td>
                   </tr>
                 );
               })}
               {sec.title && sections.length > 1 && (
                 <tr key={`sub-${si}`} style={{ background: palette.accent + '88' }}>
-                  <td colSpan={5} style={{ padding: '4px 8px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>{t.subtotal} {sec.title}</td>
-                  <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si], locale)}</td>
+                  <td colSpan={5} style={{ padding: '4px 4px', fontSize: 8.5, color: palette.dark, fontWeight: 700, textAlign: 'right' }}>{t.subtotal} {sec.title}</td>
+                  <td style={{ padding: '4px 4px', textAlign: 'right', fontWeight: 700, fontSize: 9, color: palette.dark }}>{fmtN(sectionTotals[si], locale)}</td>
                 </tr>
               )}
             </tbody>
