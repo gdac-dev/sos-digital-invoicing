@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import api from '../utils/api';
@@ -18,6 +18,7 @@ export default function InvoiceDetail() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPayment, setShowPayment] = useState(false);
+  const pdfDownloadedRef = React.useRef(false);
 
   const load = () => api.get(`/invoices/${id}`).then(r => setInvoice(r.data)).finally(() => setLoading(false));
   useEffect(() => { load(); }, [id]);
@@ -29,8 +30,11 @@ export default function InvoiceDetail() {
   };
 
   const handleWhatsApp = async () => {
-    // 1. Download the PDF first so it's ready to attach
-    await handlePDF();
+    // 1. Download the PDF first so it's ready to attach (only once per session)
+    if (!pdfDownloadedRef.current) {
+      await handlePDF();
+      pdfDownloadedRef.current = true;
+    }
     
     // 2. Open WhatsApp directly with the targeted phone number
     openWhatsApp(
@@ -71,7 +75,9 @@ export default function InvoiceDetail() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button className="btn-icon" onClick={() => navigate('/invoices')}><ArrowLeft size={18}/></button>
           <div>
-            <h1 className="page-title">{invoice.number}</h1>
+            <h1 className="page-title" onClick={handlePDF} style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'transparent', transition: '0.2s' }} onMouseEnter={e => e.target.style.textDecorationColor = 'currentColor'} onMouseLeave={e => e.target.style.textDecorationColor = 'transparent'} title="Télécharger le PDF">
+              {invoice.number}
+            </h1>
             <p className="page-subtitle">{invoice.client?.name} {invoice.client?.company && `· ${invoice.client.company}`}</p>
           </div>
         </div>
