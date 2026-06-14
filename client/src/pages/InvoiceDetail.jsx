@@ -30,26 +30,64 @@ export default function InvoiceDetail() {
   };
 
   const handleWhatsApp = async () => {
-    // 1. Download the PDF first so it's ready to attach (only once per session)
-    if (!pdfDownloadedRef.current) {
-      await handlePDF();
-      pdfDownloadedRef.current = true;
-    }
-    
-    // 2. Open WhatsApp directly with the targeted phone number
-    openWhatsApp(
-      invoice.number,
-      invoice.companyData?.name || 'SOS DIGITAL',
-      lang,
-      invoice.client?.phone,
-      invoice.client?.name,
-      invoice.client?.company
-    );
+    const el = document.getElementById('hidden-invoice-preview');
+    if (!el) return toast.error('Erreur lors de la préparation du document');
 
-    // 3. Update status to sent if it was a draft
-    if (invoice.status === 'draft') {
-      await api.patch(`/invoices/${id}`, { status: 'sent' });
-      load();
+    const msg = lang === 'fr'
+      ? `Bonjour ${invoice.client?.name || ''},\nVeuillez trouver ci-joint votre facture ${invoice.companyData?.name || ''} #${invoice.number}.`
+      : `Hello ${invoice.client?.name || ''},\nPlease find attached your invoice #${invoice.number}.`;
+
+    try {
+      // Generate Blob (only once per session if possible, but here we need it for sharing)
+      const blob = await exportInvoicePDF(el, { number: invoice.number, returnBlob: true });
+      if (!blob) throw new Error("Failed to generate PDF");
+      const file = new File([blob], `${invoice.number}.pdf`, { type: 'application/pdf' });
+
+      // Try native Share API (mobile/modern browsers)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Facture ${invoice.number}`,
+          text: msg
+        });
+      } else {
+        // Fallback: Just download and open WhatsApp link
+        if (!pdfDownloadedRef.current) {
+          await handlePDF();
+          pdfDownloadedRef.current = true;
+        }
+        openWhatsApp(
+          invoice.number,
+          invoice.companyData?.name || 'SOS DIGITAL',
+          lang,
+          invoice.client?.phone,
+          invoice.client?.name,
+          invoice.client?.company
+        );
+      }
+
+      // Mark as sent
+      if (invoice.status === 'draft') {
+        await api.patch(`/invoices/${id}`, { status: 'sent' });
+        load();
+      }
+    } catch (err) {
+      console.error(err);
+      // Fallback on error (user might have canceled share, or not supported)
+      if (err.name !== 'AbortError') {
+        if (!pdfDownloadedRef.current) {
+          await handlePDF();
+          pdfDownloadedRef.current = true;
+        }
+        openWhatsApp(
+          invoice.number,
+          invoice.companyData?.name || 'SOS DIGITAL',
+          lang,
+          invoice.client?.phone,
+          invoice.client?.name,
+          invoice.client?.company
+        );
+      }
     }
   };
   

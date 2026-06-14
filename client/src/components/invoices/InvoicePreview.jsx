@@ -100,7 +100,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
   const total = taxBase + taxAmount;
 
   // Watermark
-  const wm = design.watermark;
+  const wm = design?.watermark || { type: 'none', text: '', style: '', position: '', size: 80, opacity: 30 };
   const wmVisible = wm.type !== 'none' && (wm.type === 'image' ? false : wm.text);
   const wmStyle = {
     position: 'absolute', pointerEvents: 'none', zIndex: 10,
@@ -115,7 +115,7 @@ export default function InvoicePreview({ company, client, details, sections, ext
     ...(wm.style === 'Contour' ? { WebkitTextStroke: `2px ${palette.primary}`, color: 'transparent' } : {}),
   };
 
-  const stamp = design.stamp;
+  const stamp = design?.stamp || { image: null, size: 150, opacity: 100, x: 70, y: 75, placing: false };
 
   // Template header style
   const isModern = design.template === 'modern';
