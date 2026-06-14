@@ -36,14 +36,20 @@ export const exportInvoicePDF = async (element, options = {}) => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
+    if (options.returnBlob) {
+      return pdf.output('blob');
+    }
+
     if (window.electronAPI) {
       const arrayBuffer = pdf.output('arraybuffer');
       window.electronAPI.savePdf(`${number}.pdf`, arrayBuffer);
     } else {
       pdf.save(`${number}.pdf`);
     }
+    return true;
   } catch (err) {
     console.error('Error generating PDF:', err);
+    return null;
   } finally {
     document.body.removeChild(clone);
   }

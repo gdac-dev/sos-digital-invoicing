@@ -29,19 +29,58 @@ export default function InvoiceDetail() {
   };
 
   const handleWhatsApp = async () => {
-    await handlePDF();
-    openWhatsApp(
-      invoice.number,
-      invoice.companyData?.name || 'SOS DIGITAL',
-      lang,
-      invoice.client?.phone,
-      invoice.client?.name,
-      invoice.client?.company
-    );
-    // Mark as sent when shared via WhatsApp (only if still draft)
-    if (invoice.status === 'draft') {
-      await api.patch(`/invoices/${id}`, { status: 'sent' });
-      load();
+    const el = document.getElementById('hidden-invoice-preview');
+    if (!el) return toast.error('Erreur lors de la préparation du document');
+
+    const msg = lang === 'fr'
+      ? `Bonjour ${invoice.client?.name || ''},\nVeuillez trouver ci-joint votre facture ${invoice.companyData?.name || ''} #${invoice.number}.`
+      : `Hello ${invoice.client?.name || ''},\nPlease find attached your invoice #${invoice.number}.`;
+
+    try {
+      // Generate Blob
+      const blob = await exportInvoicePDF(el, { number: invoice.number, returnBlob: true });
+      if (!blob) throw new Error("Failed to generate PDF");
+      const file = new File([blob], `${invoice.number}.pdf`, { type: 'application/pdf' });
+
+      // Try native Share API (mobile/modern browsers)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Facture ${invoice.number}`,
+          text: msg
+        });
+      } else {
+        // Fallback: Just download and open WhatsApp link
+        await handlePDF();
+        openWhatsApp(
+          invoice.number,
+          invoice.companyData?.name || 'SOS DIGITAL',
+          lang,
+          invoice.client?.phone,
+          invoice.client?.name,
+          invoice.client?.company
+        );
+      }
+
+      // Mark as sent
+      if (invoice.status === 'draft') {
+        await api.patch(`/invoices/${id}`, { status: 'sent' });
+        load();
+      }
+    } catch (err) {
+      console.error(err);
+      // Fallback on error (user might have canceled share, or not supported)
+      if (err.name !== 'AbortError') {
+        await handlePDF();
+        openWhatsApp(
+          invoice.number,
+          invoice.companyData?.name || 'SOS DIGITAL',
+          lang,
+          invoice.client?.phone,
+          invoice.client?.name,
+          invoice.client?.company
+        );
+      }
     }
   };
   
@@ -201,7 +240,12 @@ export default function InvoiceDetail() {
               currency: invoice.currency || 'FCFA'
             }}
             sections={[{ id: 's1', title: '', items: invoice.items || [] }]}
-            extras={{ taxRate: invoice.taxRate || 0, discount: invoice.discount || 0 }}
+            extras={{
+              taxRate: invoice.taxRate || 0,
+              discount: invoice.discount || 0,
+              labour: invoice.labour || 0,
+              extra: invoice.extra || 0
+            }}
             notes={invoice.notes || ''}
             design={{
               template: invoice.templateType || 'classic',
