@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "prepare-desktop": "node scripts/prepare-desktop.js",
     "build": "electron-builder --config electron-builder.yml"
   },
   "keywords": [],
