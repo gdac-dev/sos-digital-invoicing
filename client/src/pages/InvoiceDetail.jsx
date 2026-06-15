@@ -243,19 +243,38 @@ export default function InvoiceDetail() {
             client={invoice.client || {}}
             details={{
               number: invoice.number,
-              issueDate: invoice.issueDate,
-              dueDate: invoice.dueDate,
+              date: invoice.issueDate ? invoice.issueDate.split('T')[0] : '',
+              dueDate: invoice.dueDate ? invoice.dueDate.split('T')[0] : '',
               language: invoice.language || 'fr',
-              currency: invoice.currency || 'FCFA'
+              currency: invoice.currency || 'FCFA',
+              paymentMethod: invoice.paymentMethod || 'Virement'
             }}
-            sections={[{ id: 's1', title: '', items: invoice.items || [] }]}
+            sections={(() => {
+              const loadedSections = [];
+              let currentSection = null;
+              for (const i of (invoice.items || [])) {
+                const st = i.sectionTitle || '';
+                if (!currentSection || currentSection.title !== st) {
+                  currentSection = { title: st, items: [] };
+                  loadedSections.push(currentSection);
+                }
+                currentSection.items.push({
+                  description: i.description || '',
+                  unit: i.unit || 'Unité',
+                  qty: i.quantity ?? 1,
+                  unitPrice: i.unitPrice ?? 0,
+                });
+              }
+              if (!loadedSections.length) loadedSections.push({ title: '', items: [] });
+              return loadedSections;
+            })()}
             extras={{
               taxRate: invoice.taxRate || 0,
               discount: invoice.discount || 0,
               labour: invoice.labour || 0,
               extra: invoice.extra || 0
             }}
-            notes={invoice.notes || ''}
+            notes={{ conditions: invoice.notes || '', footer: invoice.footer || '' }}
             design={{
               template: invoice.templateType || 'classic',
               palette: invoice.palette || 'blue',

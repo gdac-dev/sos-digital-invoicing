@@ -95,7 +95,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/invoices
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, dueDate, issueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData, paymentMethod } = req.body;
     if (!items?.length) return res.status(400).json({ error: 'Articles requis' });
     
     // Resolve or create client
@@ -128,6 +128,7 @@ router.post('/', async (req, res) => {
         language: language || 'fr',
         subtotal: Number(subtotal), taxRate: Number(tax), taxAmount: Number(taxAmount), discount: Number(disc), total: Number(total),
         currency: currency || 'FCFA',
+        issueDate: issueDate ? new Date(issueDate) : undefined,
         dueDate: dueDate ? new Date(dueDate) : undefined,
         notes: notes || null, footer: footer || null,
         font: font || 'Inter', 
@@ -135,12 +136,14 @@ router.post('/', async (req, res) => {
         stamp: stamp ? JSON.stringify(stamp) : null,
         labour: Number(labour) || 0, extra: Number(extra) || 0,
         companyData: companyData ? JSON.stringify(companyData) : null,
+        paymentMethod: paymentMethod || 'Virement',
         items: {
           create: parsedItems.map(i => ({
             catalogItemId: i.catalogItemId,
             sectionTitle: i.sectionTitle,
             description: i.description,
             quantity: i.quantity,
+            unit: i.unit,
             unitPrice: i.unitPrice,
             total: i.quantity * i.unitPrice,
           })),
@@ -158,7 +161,7 @@ router.post('/', async (req, res) => {
 // PATCH /api/invoices/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData } = req.body;
+    const { status, templateType, palette, language, taxRate, discount, currency, dueDate, issueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData, paymentMethod } = req.body;
     const updateData = {};
     if (status) updateData.status = status;
     if (templateType) updateData.templateType = templateType;
@@ -173,6 +176,8 @@ router.patch('/:id', async (req, res) => {
     if (labour !== undefined) updateData.labour = Number(labour);
     if (extra !== undefined) updateData.extra = Number(extra);
     if (companyData !== undefined) updateData.companyData = companyData ? JSON.stringify(companyData) : null;
+    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
+    if (issueDate) updateData.issueDate = new Date(issueDate);
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (items) {
       const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
@@ -193,6 +198,7 @@ router.patch('/:id', async (req, res) => {
           sectionTitle: i.sectionTitle || null,
           description: i.description,
           quantity: Number(i.quantity),
+          unit: i.unit || 'Unité',
           unitPrice: Number(i.unitPrice),
           total: Number(i.quantity) * Number(i.unitPrice),
         })),

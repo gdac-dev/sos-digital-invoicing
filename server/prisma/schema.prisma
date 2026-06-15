@@ -83,6 +83,7 @@ model Invoice {
   font         String        @default("Inter")
   watermark    String?       // JSON stringified
   stamp        String?       // JSON stringified
+  paymentMethod String       @default("Virement")
   labour       Float         @default(0)
   extra        Float         @default(0)
   companyData  String?       // JSON stringified
@@ -104,6 +105,7 @@ model InvoiceItem {
   sectionTitle  String?
   description   String
   quantity      Float        @default(1)
+  unit          String       @default("Unité")
   unitPrice     Float
   total         Float
 
@@ -128,6 +130,7 @@ model Quote {
   currency           String      @default("FCFA")
   issueDate          DateTime    @default(now())
   validUntil         DateTime?
+  paymentMethod      String      @default("Virement")
   notes              String?
   convertedInvoiceId String?     @unique
   createdAt          DateTime    @default(now())
@@ -145,6 +148,7 @@ model QuoteItem {
   sectionTitle String?
   description  String
   quantity     Float   @default(1)
+  unit         String  @default("Unité")
   unitPrice   Float
   total       Float
 

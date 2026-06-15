@@ -124,6 +124,7 @@ export default function InvoiceEditor() {
           dueDate: inv.dueDate ? inv.dueDate.split('T')[0] : '',
           currency: inv.currency || 'FCFA',
           language: inv.language || 'fr',
+          paymentMethod: inv.paymentMethod || 'Virement',
         }));
         setExtras(e => ({
           ...e,
@@ -183,6 +184,8 @@ export default function InvoiceEditor() {
         taxRate: Number(extras.taxRate), discount: Number(extras.discount),
         labour: Number(extras.labour), extra: Number(extras.extra),
         currency: details.currency, dueDate: details.dueDate || null,
+        issueDate: details.date ? new Date(details.date).toISOString() : undefined,
+        paymentMethod: details.paymentMethod || 'Virement',
         notes: notes.conditions, footer: notes.footer,
         items: sections.flatMap(s => 
           s.items
@@ -191,6 +194,7 @@ export default function InvoiceEditor() {
               sectionTitle: s.title || '',
               description: i.description,
               quantity: Number(parseFloat(i.qty) || 1),
+              unit: i.unit || 'Unité',
               unitPrice: Number(parseFloat(i.unitPrice) || 0),
             }))
         ),
