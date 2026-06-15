@@ -1,15 +1,15 @@
 {
   "name": "desktop",
   "version": "1.0.0",
-  "description": "",
+  "description": "SOS DIGITAL Invoicing Application",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "prepare-desktop": "node scripts/prepare-desktop.js",
     "build": "electron-builder --config electron-builder.yml"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["invoice", "sos-digital"],
+  "author": "SOS DIGITAL",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
