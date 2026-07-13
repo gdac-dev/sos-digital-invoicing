@@ -21,6 +21,7 @@ dotenv.config();
 
 export const prisma = new PrismaClient();
 const app = express();
+app.set('trust proxy', 1); // Required behind Nginx reverse proxy (Hostinger VPS)
 const PORT = process.env.PORT || 3001;
 
 // Ensure default admin user exists on every startup
