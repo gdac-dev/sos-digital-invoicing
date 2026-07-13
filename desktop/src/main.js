@@ -77,6 +77,7 @@ function setupMenu() {
       ]
     },
     { label: 'Factures', click: () => mainWindow.webContents.send('navigate', '/invoices') },
+    { label: 'Devis', click: () => mainWindow.webContents.send('navigate', '/quotes') },
     { label: 'Paiements', click: () => mainWindow.webContents.send('navigate', '/payments') },
     { label: 'Clients', click: () => mainWindow.webContents.send('navigate', '/clients') },
     { label: 'Rapports', click: () => mainWindow.webContents.send('navigate', '/reports') },
@@ -99,6 +100,7 @@ function setupTray() {
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Ouvrir', click: () => mainWindow.show() },
     { label: 'Nouvelle Facture', click: () => { mainWindow.show(); mainWindow.webContents.send('navigate', '/invoices/new'); }},
+    { label: 'Nouveau Devis', click: () => { mainWindow.show(); mainWindow.webContents.send('navigate', '/quotes/new'); }},
     { type: 'separator' },
     { label: 'Quitter', click: () => app.quit() }
   ]);

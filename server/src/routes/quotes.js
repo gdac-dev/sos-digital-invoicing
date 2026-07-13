@@ -33,6 +33,13 @@ const generateQuoteNumber = async () => {
   return number;
 };
 
+const parseQuoteJSON = (q) => ({
+  ...q,
+  watermark: q.watermark ? JSON.parse(q.watermark) : null,
+  stamp: q.stamp ? JSON.parse(q.stamp) : null,
+  companyData: q.companyData ? JSON.parse(q.companyData) : null,
+});
+
 // GET /api/quotes
 router.get('/', async (req, res) => {
   try {
@@ -50,7 +57,7 @@ router.get('/', async (req, res) => {
       }),
       prisma.quote.count({ where }),
     ]);
-    res.json({ quotes, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    res.json({ quotes: quotes.map(parseQuoteJSON), total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -62,42 +69,65 @@ router.get('/:id', async (req, res) => {
       include: { client: true, items: true, user: { select: { id: true, name: true } } },
     });
     if (!quote) return res.status(404).json({ error: 'Devis introuvable' });
-    res.json(quote);
+    res.json(parseQuoteJSON(quote));
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // POST /api/quotes
 router.post('/', async (req, res) => {
   try {
-    const { clientId, templateType, palette, language, taxRate, discount, currency, validUntil, notes, items } = req.body;
+    const { clientId, templateType, palette, language, taxRate, discount, currency, validUntil, issueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData, paymentMethod } = req.body;
     if (!clientId || !items?.length) return res.status(400).json({ error: 'Client et articles requis' });
+
+    const parsedItems = items.map(i => ({
+      sectionTitle: i.sectionTitle || null,
+      description: String(i.description || ''),
+      quantity: parseFloat(i.quantity) || 1,
+      unit: i.unit || 'Unité',
+      unitPrice: parseFloat(i.unitPrice) || 0,
+    }));
+
     const number = await generateQuoteNumber();
-    const subtotal = items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-    const taxAmount = (subtotal - (discount || 0)) * ((taxRate || 0) / 100);
-    const total = subtotal - (discount || 0) + taxAmount;
+    const subtotal = parsedItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+    const disc = parseFloat(discount) || 0;
+    const lab = parseFloat(labour) || 0;
+    const ext = parseFloat(extra) || 0;
+    const tax = parseFloat(taxRate) || 0;
+    const baseForTax = subtotal - disc + lab + ext;
+    const taxAmount = baseForTax * (tax / 100);
+    const total = baseForTax + taxAmount;
+
     const quote = await prisma.quote.create({
       data: {
         number, clientId, userId: req.user.id,
         templateType: templateType || 'classic',
         palette: palette || 'skyblue',
         language: language || 'fr',
-        subtotal, taxRate: taxRate || 0, taxAmount, discount: discount || 0, total,
+        subtotal: Number(subtotal), taxRate: Number(tax), taxAmount: Number(taxAmount), discount: Number(disc), total: Number(total),
         currency: currency || 'FCFA',
+        issueDate: issueDate ? new Date(issueDate) : undefined,
         validUntil: validUntil ? new Date(validUntil) : undefined,
-        notes,
+        notes: notes || null, footer: footer || null,
+        font: font || 'Inter',
+        watermark: watermark ? JSON.stringify(watermark) : null,
+        stamp: stamp ? JSON.stringify(stamp) : null,
+        labour: Number(labour) || 0, extra: Number(extra) || 0,
+        companyData: companyData ? JSON.stringify(companyData) : null,
+        paymentMethod: paymentMethod || 'Virement',
         items: {
-          create: items.map(i => ({
-            sectionTitle: i.sectionTitle || null,
+          create: parsedItems.map(i => ({
+            sectionTitle: i.sectionTitle,
             description: i.description,
-            quantity: Number(i.quantity),
-            unitPrice: Number(i.unitPrice),
-            total: Number(i.quantity) * Number(i.unitPrice),
+            quantity: i.quantity,
+            unit: i.unit,
+            unitPrice: i.unitPrice,
+            total: i.quantity * i.unitPrice,
           })),
         },
       },
       include: { client: true, items: true },
     });
-    res.status(201).json(quote);
+    res.status(201).json(parseQuoteJSON(quote));
   } catch (e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -141,10 +171,18 @@ router.post('/:id/convert', async (req, res) => {
         templateType: quote.templateType, palette: quote.palette, language: quote.language,
         subtotal: quote.subtotal, taxRate: quote.taxRate, taxAmount: quote.taxAmount,
         discount: quote.discount, total: quote.total, currency: quote.currency,
-        notes: quote.notes,
+        notes: quote.notes, footer: quote.footer,
+        font: quote.font || 'Inter',
+        watermark: quote.watermark, // already JSON string
+        stamp: quote.stamp, // already JSON string
+        labour: quote.labour || 0, extra: quote.extra || 0,
+        companyData: quote.companyData, // already JSON string
+        paymentMethod: quote.paymentMethod || 'Virement',
         items: {
           create: quote.items.map(i => ({
-            sectionTitle: i.sectionTitle, description: i.description, quantity: i.quantity, unitPrice: i.unitPrice, total: i.total,
+            sectionTitle: i.sectionTitle, description: i.description,
+            quantity: i.quantity, unit: i.unit || 'Unité',
+            unitPrice: i.unitPrice, total: i.total,
           })),
         },
       },
@@ -163,26 +201,44 @@ router.post('/:id/convert', async (req, res) => {
 // PATCH /api/quotes/:id
 router.patch('/:id', async (req, res) => {
   try {
-    const { status, templateType, palette, notes, validUntil, items, discount, taxRate, currency } = req.body;
-    const updateData = { status, notes, validUntil: validUntil ? new Date(validUntil) : undefined };
+    const { status, templateType, palette, language, taxRate, discount, currency, validUntil, issueDate, notes, footer, items, font, watermark, stamp, labour, extra, companyData, paymentMethod } = req.body;
+    const updateData = {};
+    if (status) updateData.status = status;
     if (templateType) updateData.templateType = templateType;
     if (palette) updateData.palette = palette;
+    if (language) updateData.language = language;
     if (currency) updateData.currency = currency;
-    
+    if (notes !== undefined) updateData.notes = notes;
+    if (footer !== undefined) updateData.footer = footer;
+    if (font !== undefined) updateData.font = font;
+    if (watermark !== undefined) updateData.watermark = watermark ? JSON.stringify(watermark) : null;
+    if (stamp !== undefined) updateData.stamp = stamp ? JSON.stringify(stamp) : null;
+    if (labour !== undefined) updateData.labour = Number(labour);
+    if (extra !== undefined) updateData.extra = Number(extra);
+    if (companyData !== undefined) updateData.companyData = companyData ? JSON.stringify(companyData) : null;
+    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
+    if (issueDate) updateData.issueDate = new Date(issueDate);
+    if (validUntil) updateData.validUntil = new Date(validUntil);
+
     if (items) {
       const subtotal = items.reduce((s, i) => s + Number(i.quantity) * Number(i.unitPrice), 0);
-      const taxAmt = (subtotal - (discount || 0)) * ((taxRate || 0) / 100);
+      const disc = discount || 0;
+      const lab = labour || 0;
+      const ext = extra || 0;
+      const baseForTax = subtotal - disc + lab + ext;
+      const taxAmt = baseForTax * ((taxRate || 0) / 100);
       updateData.subtotal = subtotal;
       updateData.taxRate = taxRate || 0;
       updateData.taxAmount = taxAmt;
-      updateData.discount = discount || 0;
-      updateData.total = subtotal - (discount || 0) + taxAmt;
+      updateData.discount = disc;
+      updateData.total = baseForTax + taxAmt;
       await prisma.quoteItem.deleteMany({ where: { quoteId: req.params.id } });
       updateData.items = {
         create: items.map(i => ({
           sectionTitle: i.sectionTitle || null,
           description: i.description,
           quantity: Number(i.quantity),
+          unit: i.unit || 'Unité',
           unitPrice: Number(i.unitPrice),
           total: Number(i.quantity) * Number(i.unitPrice),
         })),
@@ -192,8 +248,9 @@ router.patch('/:id', async (req, res) => {
     const quote = await prisma.quote.update({
       where: { id: req.params.id, userId: req.user.id },
       data: updateData,
+      include: { client: true, items: true },
     });
-    res.json(quote);
+    res.json(parseQuoteJSON(quote));
   } catch { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
